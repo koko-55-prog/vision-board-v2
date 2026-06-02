@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #__next {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: #f5f2ed;
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic Pro',
+    'YuGothic', 'Yu Gothic', 'Meiryo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Horizontal scroll: show thin scrollbar for discoverability */
+.lanes-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.lanes-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lanes-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+}
+.lanes-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.26);
+}
