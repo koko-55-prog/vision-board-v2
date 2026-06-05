@@ -31,19 +31,25 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   const [imgPreviewError, setImgPreviewError] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
-  // AI usage limit (3 total, passphrase to unlock more)
-  const AI_LIMIT = 3
-  const USAGE_KEY = 'vb:ai-usage-count'
-  const [aiUsageCount, setAiUsageCount] = useState(0)
-  const [showPassphrase, setShowPassphrase] = useState(false)
-  const [passphraseInput, setPassphraseInput] = useState('')
-  const [passphraseError, setPassphraseError] = useState(false)
+  // AI usage limit
+  const AI_LIMIT      = 3
+  const MONITOR_LIMIT = 30
+  const USAGE_KEY     = 'vb:ai-usage-count'
+  const MONITOR_KEY   = 'vb:monitor-mode'
+  const [aiUsageCount, setAiUsageCount]   = useState(0)
+  const [isMonitorMode, setIsMonitorMode] = useState(false)
+  const [showPassphrase, setShowPassphrase]     = useState(false)
+  const [passphraseInput, setPassphraseInput]   = useState('')
+  const [passphraseError, setPassphraseError]   = useState(false)
   const [passphraseChecking, setPassphraseChecking] = useState(false)
-  const isAILocked = aiUsageCount >= AI_LIMIT
+  const activeLimit    = isMonitorMode ? MONITOR_LIMIT : AI_LIMIT
+  const isAILocked     = aiUsageCount >= activeLimit
+  const isMonitorMaxed = isMonitorMode && aiUsageCount >= MONITOR_LIMIT
 
   useEffect(() => {
     const stored = parseInt(localStorage.getItem(USAGE_KEY) ?? '0', 10)
     setAiUsageCount(isNaN(stored) ? 0 : stored)
+    setIsMonitorMode(localStorage.getItem(MONITOR_KEY) === 'true')
   }, [])
 
   const incrementAIUsage = () => {
@@ -62,8 +68,15 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passphrase: passphraseInput.trim() }),
       })
-      const { valid } = await res.json()
+      const { valid, type } = await res.json()
       if (valid) {
+        if (type === 'monitor') {
+          localStorage.setItem(MONITOR_KEY, 'true')
+          setIsMonitorMode(true)
+        } else {
+          localStorage.removeItem(MONITOR_KEY)
+          setIsMonitorMode(false)
+        }
         localStorage.setItem(USAGE_KEY, '0')
         setAiUsageCount(0)
         setShowPassphrase(false)
@@ -250,48 +263,61 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
 
             {/* AI generate */}
             {isAILocked ? (
-              /* Locked state */
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🔒</span>
-                  <p className="text-sm font-semibold text-amber-800">
-                    AI生成の無料枠を使い切りました（{AI_LIMIT}/{AI_LIMIT}回）
-                  </p>
-                </div>
-                {showPassphrase ? (
-                  <div className="space-y-1.5">
-                    <div className="flex gap-2">
-                      <input
-                        autoFocus
-                        type="text"
-                        value={passphraseInput}
-                        onChange={e => { setPassphraseInput(e.target.value); setPassphraseError(false) }}
-                        onKeyDown={e => e.key === 'Enter' && handlePassphraseSubmit()}
-                        placeholder="合言葉を入力..."
-                        className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none"
-                        style={{ borderColor: passphraseError ? '#ef4444' : '#d6d3d1' }}
-                      />
-                      <button
-                        onClick={handlePassphraseSubmit}
-                        disabled={passphraseChecking || !passphraseInput.trim()}
-                        className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-40 transition-colors"
-                      >
-                        {passphraseChecking ? <Loader2 size={14} className="animate-spin" /> : '解除'}
-                      </button>
-                    </div>
-                    {passphraseError && (
-                      <p className="text-xs text-red-500">合言葉が違います</p>
-                    )}
+              isMonitorMaxed ? (
+                /* Monitor limit reached — no further unlock */
+                <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔒</span>
+                    <p className="text-sm font-semibold text-stone-600">
+                      モニター枠（{MONITOR_LIMIT}回）を使い切りました
+                    </p>
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setShowPassphrase(true)}
-                    className="text-xs text-amber-700 underline hover:text-amber-900"
-                  >
-                    合言葉を入力してロックを解除する →
-                  </button>
-                )}
-              </div>
+                  <p className="text-xs text-stone-400">ご参加ありがとうございました！</p>
+                </div>
+              ) : (
+                /* Normal lock — passphrase available */
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🔒</span>
+                    <p className="text-sm font-semibold text-amber-800">
+                      AI生成の無料枠を使い切りました（{AI_LIMIT}/{AI_LIMIT}回）
+                    </p>
+                  </div>
+                  {showPassphrase ? (
+                    <div className="space-y-1.5">
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={passphraseInput}
+                          onChange={e => { setPassphraseInput(e.target.value); setPassphraseError(false) }}
+                          onKeyDown={e => e.key === 'Enter' && handlePassphraseSubmit()}
+                          placeholder="合言葉を入力..."
+                          className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none"
+                          style={{ borderColor: passphraseError ? '#ef4444' : '#d6d3d1' }}
+                        />
+                        <button
+                          onClick={handlePassphraseSubmit}
+                          disabled={passphraseChecking || !passphraseInput.trim()}
+                          className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-40 transition-colors"
+                        >
+                          {passphraseChecking ? <Loader2 size={14} className="animate-spin" /> : '解除'}
+                        </button>
+                      </div>
+                      {passphraseError && (
+                        <p className="text-xs text-red-500">合言葉が違います</p>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowPassphrase(true)}
+                      className="text-xs text-amber-700 underline hover:text-amber-900"
+                    >
+                      合言葉を入力してロックを解除する →
+                    </button>
+                  )}
+                </div>
+              )
             ) : (
               /* Normal button with remaining count */
               <>
@@ -303,7 +329,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                     : <><Sparkles size={15} /> AIで生成する
                       {aiUsageCount > 0 && (
                         <span className="ml-1 text-[11px] opacity-60">
-                          (残り{AI_LIMIT - aiUsageCount}回)
+                          (残り{activeLimit - aiUsageCount}回)
                         </span>
                       )}
                     </>}
