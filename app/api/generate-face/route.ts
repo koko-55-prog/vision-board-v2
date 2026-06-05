@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   console.log(`[generate-face] prompt="${prompt.slice(0, 60)}..." face=${!!faceImage}`)
 
   const createRes = await fetch(
-    'https://api.replicate.com/v1/models/zsxkib/instant-id/predictions',
+    'https://api.replicate.com/v1/predictions',
     {
       method: 'POST',
       headers: {
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
         Prefer: 'wait',
       },
       body: JSON.stringify({
+        version: '2e4785a4d80dadf580077b2244c8d7c05d8e3faac04a04c02d8e099dd2876789',
         input: {
           image: faceImage,
           prompt,
