@@ -33,7 +33,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
 
   // AI usage limit
   const AI_LIMIT      = 3
-  const MONITOR_LIMIT = 30
+  const MONITOR_LIMIT = 50
   const USAGE_KEY     = 'vb:ai-usage-count'
   const MONITOR_KEY   = 'vb:monitor-mode'
   const [aiUsageCount, setAiUsageCount]   = useState(0)
