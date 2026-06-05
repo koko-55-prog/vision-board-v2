@@ -31,6 +31,51 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   const [imgPreviewError, setImgPreviewError] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
+  // AI usage limit (3 total, passphrase to unlock more)
+  const AI_LIMIT = 3
+  const USAGE_KEY = 'vb:ai-usage-count'
+  const [aiUsageCount, setAiUsageCount] = useState(0)
+  const [showPassphrase, setShowPassphrase] = useState(false)
+  const [passphraseInput, setPassphraseInput] = useState('')
+  const [passphraseError, setPassphraseError] = useState(false)
+  const [passphraseChecking, setPassphraseChecking] = useState(false)
+  const isAILocked = aiUsageCount >= AI_LIMIT
+
+  useEffect(() => {
+    const stored = parseInt(localStorage.getItem(USAGE_KEY) ?? '0', 10)
+    setAiUsageCount(isNaN(stored) ? 0 : stored)
+  }, [])
+
+  const incrementAIUsage = () => {
+    const next = aiUsageCount + 1
+    setAiUsageCount(next)
+    localStorage.setItem(USAGE_KEY, String(next))
+  }
+
+  const handlePassphraseSubmit = async () => {
+    if (!passphraseInput.trim()) return
+    setPassphraseChecking(true)
+    setPassphraseError(false)
+    try {
+      const res = await fetch('/api/verify-passphrase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passphrase: passphraseInput.trim() }),
+      })
+      const { valid } = await res.json()
+      if (valid) {
+        localStorage.setItem(USAGE_KEY, '0')
+        setAiUsageCount(0)
+        setShowPassphrase(false)
+        setPassphraseInput('')
+      } else {
+        setPassphraseError(true)
+      }
+    } finally {
+      setPassphraseChecking(false)
+    }
+  }
+
   const isAnyLoading = isPexelsSearching || isAIGenerating || isUploading
   const currentQuestion = questions[qIndex]
   const selectedLane = lanes.find(l => l.id === selectedLaneId) || lanes[0]
@@ -64,7 +109,8 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   }, [text, isAnyLoading])
 
   const generateAI = useCallback(async () => {
-    if (!text.trim() || isAnyLoading) return
+    if (!text.trim() || isAnyLoading || isAILocked) return
+    incrementAIUsage()
     setIsAIGenerating(true)
     setImageUrl(null)
     setFetchError(null)
@@ -75,7 +121,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
       const msg = err instanceof Error ? err.message : 'AI生成に失敗しました。'
       setFetchError(msg)
     } finally { setIsAIGenerating(false) }
-  }, [text, isAnyLoading])
+  }, [text, isAnyLoading, isAILocked, aiUsageCount])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -203,17 +249,71 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
             </div>
 
             {/* AI generate */}
-            <button onClick={generateAI} disabled={!text.trim() || isAnyLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ borderColor: text.trim() ? '#a855f740' : '#e7e5e4', color: text.trim() ? '#7c3aed' : '#a8a29e', backgroundColor: text.trim() ? '#faf5ff' : 'transparent' }}>
-              {isAIGenerating
-                ? <><Loader2 size={15} className="animate-spin" /> AIが生成中... (1〜3分かかります)</>
-                : <><Sparkles size={15} /> AIで生成する</>}
-            </button>
-            {isAIGenerating && (
-              <p className="text-[11px] text-center text-stone-400 mt-1">
-                コミュニティGPUで処理中です。そのままお待ちください ☕
-              </p>
+            {isAILocked ? (
+              /* Locked state */
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔒</span>
+                  <p className="text-sm font-semibold text-amber-800">
+                    AI生成の無料枠を使い切りました（{AI_LIMIT}/{AI_LIMIT}回）
+                  </p>
+                </div>
+                {showPassphrase ? (
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={passphraseInput}
+                        onChange={e => { setPassphraseInput(e.target.value); setPassphraseError(false) }}
+                        onKeyDown={e => e.key === 'Enter' && handlePassphraseSubmit()}
+                        placeholder="合言葉を入力..."
+                        className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none"
+                        style={{ borderColor: passphraseError ? '#ef4444' : '#d6d3d1' }}
+                      />
+                      <button
+                        onClick={handlePassphraseSubmit}
+                        disabled={passphraseChecking || !passphraseInput.trim()}
+                        className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 disabled:opacity-40 transition-colors"
+                      >
+                        {passphraseChecking ? <Loader2 size={14} className="animate-spin" /> : '解除'}
+                      </button>
+                    </div>
+                    {passphraseError && (
+                      <p className="text-xs text-red-500">合言葉が違います</p>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowPassphrase(true)}
+                    className="text-xs text-amber-700 underline hover:text-amber-900"
+                  >
+                    合言葉を入力してロックを解除する →
+                  </button>
+                )}
+              </div>
+            ) : (
+              /* Normal button with remaining count */
+              <>
+                <button onClick={generateAI} disabled={!text.trim() || isAnyLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ borderColor: text.trim() ? '#a855f740' : '#e7e5e4', color: text.trim() ? '#7c3aed' : '#a8a29e', backgroundColor: text.trim() ? '#faf5ff' : 'transparent' }}>
+                  {isAIGenerating
+                    ? <><Loader2 size={15} className="animate-spin" /> AIが生成中...</>
+                    : <><Sparkles size={15} /> AIで生成する
+                      {aiUsageCount > 0 && (
+                        <span className="ml-1 text-[11px] opacity-60">
+                          (残り{AI_LIMIT - aiUsageCount}回)
+                        </span>
+                      )}
+                    </>}
+                </button>
+                {isAIGenerating && (
+                  <p className="text-[11px] text-center text-stone-400 mt-1">
+                    高品質AIで生成中です。そのままお待ちください ✨
+                  </p>
+                )}
+              </>
             )}
 
             {/* Error message */}

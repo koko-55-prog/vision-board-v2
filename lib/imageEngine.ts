@@ -60,7 +60,7 @@ export async function fetchPollinationsImage(query: string): Promise<ImageResult
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt }),
-    signal: AbortSignal.timeout(270000),  // 4.5 min — Stable Horde can be slow
+    signal: AbortSignal.timeout(120000),  // 2 min — Replicate is fast (~10s), Horde is slow (~3min)
   })
 
   if (!res.ok) {
