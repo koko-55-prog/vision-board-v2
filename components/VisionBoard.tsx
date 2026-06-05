@@ -73,22 +73,56 @@ export function VisionBoard() {
     return () => clearTimeout(saveTimer.current)
   }, [cards, boardName, activeBoardId, isLoaded])
 
+  // ── Undo history ──────────────────────────────────────────────────────────
+  const cardsRef = useRef<VisionCard[]>(cards)
+  useEffect(() => { cardsRef.current = cards }, [cards])
+
+  const undoStackRef = useRef<VisionCard[][]>([])
+  const [undoCount, setUndoCount] = useState(0)
+
+  const pushUndo = useCallback(() => {
+    undoStackRef.current = [...undoStackRef.current.slice(-29), [...cardsRef.current]]
+    setUndoCount(undoStackRef.current.length)
+  }, [])
+
+  const undo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return
+    const previous = undoStackRef.current.pop()!
+    setUndoCount(undoStackRef.current.length)
+    setCards(previous)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo])
+
   // ── Card operations ───────────────────────────────────────────────────────
   const addCard = useCallback((data: Omit<VisionCard, 'id' | 'createdAt' | 'rotation'>) => {
+    pushUndo()
     setCards(prev => [...prev, { ...data, id: `card-${genId()}`, rotation: ROTATIONS[Math.floor(Math.random() * ROTATIONS.length)], createdAt: new Date() }])
-  }, [])
+  }, [pushUndo])
 
   const editCard = useCallback((cardId: string, updates: Omit<VisionCard, 'id' | 'createdAt' | 'rotation'>) => {
+    pushUndo()
     setCards(prev => prev.map(c => c.id === cardId ? { ...c, ...updates } : c))
-  }, [])
+  }, [pushUndo])
 
   const moveCard = useCallback((cardId: string, laneId: LaneId) => {
+    pushUndo()
     setCards(prev => prev.map(c => c.id === cardId ? { ...c, laneId } : c))
-  }, [])
+  }, [pushUndo])
 
   const deleteCard = useCallback((cardId: string) => {
+    pushUndo()
     setCards(prev => prev.filter(c => c.id !== cardId))
-  }, [])
+  }, [pushUndo])
 
   // ── Modal helpers ─────────────────────────────────────────────────────────
   const openModal = useCallback((laneId?: LaneId) => {
@@ -204,6 +238,9 @@ export function VisionBoard() {
         onBoardManagerClick={() => setShowBoardManager(true)}
         onDownload={handleDownload}
         isDownloading={isDownloading}
+        onUndo={undo}
+        canUndo={undoCount > 0}
+        undoCount={undoCount}
       />
 
       <main style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Download, ChevronDown, Loader2 } from 'lucide-react'
+import { Plus, Download, ChevronDown, Loader2, Undo2 } from 'lucide-react'
 
 interface HeaderProps {
   boardName: string
@@ -8,9 +8,12 @@ interface HeaderProps {
   onBoardManagerClick: () => void
   onDownload: () => void
   isDownloading: boolean
+  onUndo: () => void
+  canUndo: boolean
+  undoCount: number
 }
 
-export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading }: HeaderProps) {
+export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount }: HeaderProps) {
   return (
     <header
       className="flex-shrink-0 flex items-center justify-between px-6 border-b gap-3"
@@ -52,6 +55,22 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
 
       {/* Right: actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Undo */}
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          title="元に戻す (⌘Z)"
+        >
+          <Undo2 size={14} />
+          <span className="hidden sm:inline">元に戻す</span>
+          {canUndo && (
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-stone-700 text-white text-[9px] font-bold flex items-center justify-center">
+              {undoCount > 9 ? '9+' : undoCount}
+            </span>
+          )}
+        </button>
+
         {/* Download */}
         <button
           onClick={onDownload}
