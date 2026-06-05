@@ -3,7 +3,7 @@
 
 export const maxDuration = 30
 
-const ALLOWED_HOSTS = ['image.pollinations.ai', 'images.pexels.com']
+const ALLOWED_HOSTS = ['image.pollinations.ai', 'images.pexels.com', 'replicate.delivery']
 const ALLOWED_HOST_SUFFIXES = ['.replicate.delivery', '.replicate.com']
 const MAX_RETRIES = 3
 const RETRY_WAIT_MS = 15000  // Pollinations queue clears in ~15s
@@ -29,14 +29,12 @@ export async function GET(request: Request) {
       const res = await fetch(targetUrl)
 
       if (res.ok) {
-        const contentType = res.headers.get('content-type') ?? ''
-        if (!contentType.startsWith('image/')) {
-          return new Response('Not an image response', { status: 502 })
-        }
+        const contentType = res.headers.get('content-type') ?? 'image/webp'
         const data = await res.arrayBuffer()
+        const resolvedType = contentType.startsWith('image/') ? contentType : 'image/webp'
         return new Response(data, {
           headers: {
-            'Content-Type': contentType,
+            'Content-Type': resolvedType,
             'Cache-Control': 'public, max-age=3600',
           },
         })
