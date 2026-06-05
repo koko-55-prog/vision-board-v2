@@ -4,6 +4,7 @@
 export const maxDuration = 30
 
 const ALLOWED_HOSTS = ['image.pollinations.ai', 'images.pexels.com']
+const ALLOWED_HOST_SUFFIXES = ['.replicate.delivery', '.replicate.com']
 const MAX_RETRIES = 3
 const RETRY_WAIT_MS = 15000  // Pollinations queue clears in ~15s
 
@@ -17,7 +18,9 @@ export async function GET(request: Request) {
   try { hostname = new URL(targetUrl).hostname } catch {
     return new Response('Invalid URL', { status: 400 })
   }
-  if (!ALLOWED_HOSTS.includes(hostname)) {
+  const hostAllowed = ALLOWED_HOSTS.includes(hostname) ||
+    ALLOWED_HOST_SUFFIXES.some(s => hostname.endsWith(s))
+  if (!hostAllowed) {
     return new Response('Domain not allowed', { status: 403 })
   }
 

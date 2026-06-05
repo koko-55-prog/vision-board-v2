@@ -107,25 +107,45 @@ export async function compressFaceForStorage(file: File): Promise<string> {
   return compressToJpeg(raw, 480, 480, 0.70)
 }
 
-// Face-preserving AI generation via /api/generate-face (PuLID-Flux)
+// Face-preserving AI generation — client-side polling to avoid Vercel 60s timeout
 export async function fetchFaceImage(query: string, faceBase64: string): Promise<ImageResult> {
   const prompt = `${query}, ${QUALITY_BOOST}`
 
-  const res = await fetch('/api/generate-face', {
+  // Step 1: Start prediction (returns {id} immediately)
+  const startRes = await fetch('/api/generate-face', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt, face_image: faceBase64 }),
-    signal: AbortSignal.timeout(120000),
+    signal: AbortSignal.timeout(30000),
   })
-
-  if (!res.ok) {
-    const msg = await res.text().catch(() => '')
-    throw new Error(`Face AI generation failed (${res.status}): ${msg.slice(0, 100)}`)
+  if (!startRes.ok) {
+    const msg = await startRes.text().catch(() => '')
+    throw new Error(`Face AI generation failed (${startRes.status}): ${msg.slice(0, 100)}`)
   }
+  const { id } = await startRes.json()
 
-  const blob = await res.blob()
-  const raw = await blobToDataUrl(blob)
-  return { url: await compressToJpeg(raw), source: 'face-ai' }
+  // Step 2: Poll until done (max 3 minutes)
+  const deadline = Date.now() + 3 * 60 * 1000
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, 3000))
+    const pollRes = await fetch(`/api/poll-prediction?id=${encodeURIComponent(id)}`, {
+      signal: AbortSignal.timeout(10000),
+    })
+    if (!pollRes.ok) continue
+    const data = await pollRes.json()
+
+    if (data.status === 'succeeded' && data.url) {
+      const imgRes = await fetch(`/api/proxy-image?url=${encodeURIComponent(data.url)}`)
+      if (!imgRes.ok) throw new Error('Failed to fetch generated image')
+      const blob = await imgRes.blob()
+      const raw = await blobToDataUrl(blob)
+      return { url: await compressToJpeg(raw), source: 'face-ai' }
+    }
+    if (data.status === 'failed') {
+      throw new Error(`Face AI generation failed: ${data.error ?? 'unknown'}`)
+    }
+  }
+  throw new Error('Face AI generation timed out')
 }
 
 // Prototype mock (unused in production)
