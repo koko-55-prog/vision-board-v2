@@ -104,7 +104,7 @@ export async function uploadImageFile(file: File): Promise<ImageResult> {
 // Resize to 480px max and compress for localStorage (target: ~30–60 KB base64)
 export async function compressFaceForStorage(file: File): Promise<string> {
   const raw = await blobToDataUrl(file)
-  return compressToJpeg(raw, 480, 480, 0.70)
+  return compressToJpeg(raw, 640, 640, 0.85)
 }
 
 // Face-preserving AI generation — client-side polling to avoid Vercel 60s timeout
