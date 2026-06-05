@@ -1,6 +1,6 @@
 /**
  * Face-to-Image Generation — Server-side Route
- * Model: zsxkib/pulid-flux (FLUX.1-dev + PuLID face preservation)
+ * Model: zsxkib/instant-id (InstantID + SDXL, face preservation)
  * Falls back to text-only Flux Pro if no face_image is provided.
  */
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   console.log(`[generate-face] prompt="${prompt.slice(0, 60)}..." face=${!!faceImage}`)
 
   const createRes = await fetch(
-    'https://api.replicate.com/v1/models/zsxkib/pulid-flux/predictions',
+    'https://api.replicate.com/v1/models/zsxkib/instant-id/predictions',
     {
       method: 'POST',
       headers: {
@@ -65,14 +65,14 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         input: {
+          image: faceImage,
           prompt,
-          main_face_image: faceImage,
-          num_steps: 20,
-          start_step: 4,
-          guidance_scale: 4,
-          true_cfg: 1,
-          width: 896,
-          height: 1152,
+          negative_prompt: 'deformed, distorted, disfigured, blurry, ugly, bad anatomy',
+          num_outputs: 1,
+          guidance_scale: 5,
+          num_inference_steps: 30,
+          ip_adapter_scale: 0.8,
+          controlnet_conditioning_scale: 0.8,
         },
       }),
     }
@@ -80,12 +80,12 @@ export async function POST(request: Request) {
 
   if (!createRes.ok) {
     const txt = await createRes.text().catch(() => '')
-    console.error('PuLID-Flux create failed:', createRes.status, txt.slice(0, 300))
+    console.error('InstantID create failed:', createRes.status, txt.slice(0, 300))
     return new Response(`Replicate error ${createRes.status}`, { status: 502 })
   }
 
   const prediction = await createRes.json()
-  console.log('PuLID-Flux prediction status:', prediction.status, prediction.id)
+  console.log('InstantID prediction status:', prediction.status, prediction.id)
 
   if (prediction.status === 'succeeded') return fetchAndReturn(extractUrl(prediction.output))
   return pollUntilDone(token, prediction.id)
