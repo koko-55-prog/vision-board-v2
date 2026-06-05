@@ -32,121 +32,86 @@ function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.85): Pr
   })
 }
 
-// ── Translation ───────────────────────────────────────────────────────────────
-
-async function translateForPexels(query: string): Promise<string> {
-  try {
-    const system = 'You are a stock photo search expert. Convert the following Japanese text into 2-4 concise English keywords for searching stock photos. Focus on the most visual, concrete nouns and adjectives. Output ONLY the keywords separated by spaces. No punctuation, no commentary.'
-    const res = await fetch(
-      `https://text.pollinations.ai/${encodeURIComponent(query)}?system=${encodeURIComponent(system)}`,
-      { signal: AbortSignal.timeout(8000) }
-    )
-    if (res.ok) {
-      const text = (await res.text()).trim()
-      if (text) return text.slice(0, 80)
-    }
-  } catch { /* fall through */ }
-  return query
+// Fetch an external image via our Next.js server-side proxy (bypasses CORS)
+async function fetchViaProxy(externalUrl: string, timeoutMs = 30000): Promise<string> {
+  const res = await fetch(
+    `/api/proxy-image?url=${encodeURIComponent(externalUrl)}`,
+    { signal: AbortSignal.timeout(timeoutMs) }
+  )
+  if (!res.ok) throw new Error(`Proxy ${res.status}`)
+  const blob = await res.blob()
+  const raw = await blobToDataUrl(blob)
+  return compressToJpeg(raw)
 }
 
-async function translateToImagePrompt(query: string): Promise<string> {
-  try {
-    const system = 'You are a prompt engineer. Translate the following Japanese vision into a detailed, beautiful English image prompt for AI image generation. Output ONLY the English prompt text. No commentary, no quotes.'
-    const res = await fetch(
-      `https://text.pollinations.ai/${encodeURIComponent(query)}?system=${encodeURIComponent(system)}`,
-      { signal: AbortSignal.timeout(12000) }
-    )
-    if (res.ok) {
-      const text = (await res.text()).trim()
-      if (text) return text
-    }
-  } catch { /* fall through */ }
-  return query
-}
+// ── Quality boost automatically appended to all AI prompts ────────────────────
 
-// ── HuggingFace ───────────────────────────────────────────────────────────────
+const QUALITY_BOOST =
+  'photorealistic, 8k resolution, cinematic lighting, highly aesthetic, masterpiece, professional photography'
 
-async function generateWithHuggingFace(prompt: string): Promise<string> {
-  const token = process.env.NEXT_PUBLIC_HF_TOKEN
-  if (!token) throw new Error('NEXT_PUBLIC_HF_TOKEN is not set')
+// ── AI Image Generation ───────────────────────────────────────────────────────
+// Calls app/api/generate-ai/route.ts (server-side).
+// To switch AI provider, only that route file needs to change.
 
-  const endpoint = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inputs: prompt, parameters: { num_inference_steps: 4, width: 800, height: 600 } }),
-      signal: AbortSignal.timeout(90000),
-    })
-    if (res.ok) return blobToDataUrl(await res.blob())
-    if (res.status === 503) {
-      const data = await res.json().catch(() => ({}))
-      await new Promise(r => setTimeout(r, Math.min(((data.estimated_time ?? 20) + 5) * 1000, 35000)))
-      continue
-    }
-    throw new Error(`HF error: ${res.status}`)
-  }
-  throw new Error('HF max retries exceeded')
-}
-
-// ── Public API ────────────────────────────────────────────────────────────────
-
-// Upload from device — compress & convert to base64
-export async function uploadImageFile(file: File): Promise<ImageResult> {
-  const raw = await blobToDataUrl(file)
-  const url = await compressToJpeg(raw)
-  return { url, source: 'upload' }
-}
-
-// "AIで生成する" — HF FLUX → Pollinations fallback
 export async function fetchPollinationsImage(query: string): Promise<ImageResult> {
-  const englishPrompt = await translateToImagePrompt(query)
-  const prompt = `${englishPrompt}, beautiful, aesthetic, dreamy, high quality, photorealistic`
-  try {
-    return { url: await generateWithHuggingFace(prompt), source: 'huggingface' }
-  } catch (err) {
-    console.warn('HF failed, falling back to Pollinations Flux:', err)
-    const seed = Math.floor(Math.random() * 99999)
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=600&nologo=true&seed=${seed}&model=flux`
-    await fetch(url, { mode: 'no-cors', signal: AbortSignal.timeout(60000) }).catch(() => {})
-    return { url, source: 'pollinations' }
+  const prompt = `${query}, ${QUALITY_BOOST}`
+
+  const res = await fetch('/api/generate-ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+    signal: AbortSignal.timeout(270000),  // 4.5 min — Stable Horde can be slow
+  })
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => '')
+    throw new Error(`AI generation failed (${res.status}): ${msg.slice(0, 100)}`)
   }
+
+  const blob = await res.blob()
+  const raw = await blobToDataUrl(blob)
+  return { url: await compressToJpeg(raw), source: 'pollinations' }
 }
 
-// "Pexelsで写真を探す" — translate → Pexels → fetch+compress → HF fallback
+// ── Pexels Photo Search ───────────────────────────────────────────────────────
+
 export async function fetchVisionImageReal(query: string): Promise<ImageResult> {
   const apiKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY
   if (apiKey) {
-    const keywords = await translateForPexels(query)
     try {
       const res = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(keywords)}&per_page=15&orientation=landscape`,
+        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&orientation=landscape`,
         { headers: { Authorization: apiKey } }
       )
       if (res.ok) {
         const data = await res.json()
         if (data.photos?.length > 0) {
           const pick = data.photos[Math.floor(Math.random() * Math.min(8, data.photos.length))]
-          // Fetch medium size and compress to base64 (works offline + with html2canvas)
           try {
-            const imgRes = await fetch(pick.src.medium || pick.src.small)
-            const blob = await imgRes.blob()
-            const raw = await blobToDataUrl(blob)
-            const url = await compressToJpeg(raw)
-            return { url, source: 'pexels' }
+            return { url: await fetchViaProxy(pick.src.medium || pick.src.small), source: 'pexels' }
           } catch {
             return { url: pick.src.large || pick.src.medium, source: 'pexels' }
           }
         }
       }
-    } catch { /* fall through */ }
+    } catch { /* fall through to AI */ }
   }
   return fetchPollinationsImage(query)
 }
 
-// Prototype mock
+// ── Image Upload ──────────────────────────────────────────────────────────────
+
+export async function uploadImageFile(file: File): Promise<ImageResult> {
+  const raw = await blobToDataUrl(file)
+  return { url: await compressToJpeg(raw), source: 'upload' }
+}
+
+// Prototype mock (unused in production)
 export async function fetchVisionImage(query: string): Promise<ImageResult> {
   await new Promise(r => setTimeout(r, 900 + Math.random() * 700))
   const seed = query.replace(/[^\w]/g, '').slice(0, 28)
-  return { url: `https://picsum.photos/seed/${seed}${Math.floor(Math.random() * 999)}/800/600`, source: 'mock' }
+  return {
+    url: `https://picsum.photos/seed/${seed}${Math.floor(Math.random() * 999)}/800/600`,
+    source: 'mock',
+  }
 }

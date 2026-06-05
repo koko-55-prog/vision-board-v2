@@ -29,6 +29,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   const [isUploading, setIsUploading] = useState(false)
   const [isImgLoading, setIsImgLoading] = useState(false)
   const [imgPreviewError, setImgPreviewError] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
 
   const isAnyLoading = isPexelsSearching || isAIGenerating || isUploading
   const currentQuestion = questions[qIndex]
@@ -46,15 +47,19 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     setImageSource(source)
     setIsImgLoading(true)
     setImgPreviewError(false)
+    setFetchError(null)
   }
 
   const searchPexels = useCallback(async () => {
     if (!text.trim() || isAnyLoading) return
     setIsPexelsSearching(true)
     setImageUrl(null)
+    setFetchError(null)
     try {
       const result = await fetchVisionImageReal(text)
       setImage(result.url, result.source)
+    } catch (err) {
+      setFetchError('画像の取得に失敗しました。もう一度お試しください。')
     } finally { setIsPexelsSearching(false) }
   }, [text, isAnyLoading])
 
@@ -62,9 +67,13 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     if (!text.trim() || isAnyLoading) return
     setIsAIGenerating(true)
     setImageUrl(null)
+    setFetchError(null)
     try {
       const result = await fetchPollinationsImage(text)
       setImage(result.url, result.source)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'AI生成に失敗しました。'
+      setFetchError(msg)
     } finally { setIsAIGenerating(false) }
   }, [text, isAnyLoading])
 
@@ -197,8 +206,20 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
             <button onClick={generateAI} disabled={!text.trim() || isAnyLoading}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ borderColor: text.trim() ? '#a855f740' : '#e7e5e4', color: text.trim() ? '#7c3aed' : '#a8a29e', backgroundColor: text.trim() ? '#faf5ff' : 'transparent' }}>
-              {isAIGenerating ? <><Loader2 size={15} className="animate-spin" /> AIが生成中...</> : <><Sparkles size={15} /> AIで生成する</>}
+              {isAIGenerating
+                ? <><Loader2 size={15} className="animate-spin" /> AIが生成中... (1〜3分かかります)</>
+                : <><Sparkles size={15} /> AIで生成する</>}
             </button>
+            {isAIGenerating && (
+              <p className="text-[11px] text-center text-stone-400 mt-1">
+                コミュニティGPUで処理中です。そのままお待ちください ☕
+              </p>
+            )}
+
+            {/* Error message */}
+            {fetchError && (
+              <p className="mt-2 text-xs text-red-500 text-center">{fetchError}</p>
+            )}
 
             {/* Preview */}
             {imageUrl && (
