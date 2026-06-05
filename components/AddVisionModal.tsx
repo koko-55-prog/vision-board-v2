@@ -89,6 +89,9 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     }
   }
 
+  // Set to true to re-enable face photo mode
+  const FACE_MODE_ENABLED = false
+
   // Face photo — localStorage persistence
   const FACE_KEY = 'vb:face-image'
   const faceInputRef = useRef<HTMLInputElement>(null)
@@ -158,7 +161,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     setImageUrl(null)
     setFetchError(null)
     try {
-      const result = faceImage
+      const result = (FACE_MODE_ENABLED && faceImage)
         ? await fetchFaceImage(text, faceImage)
         : await fetchPollinationsImage(text)
       setImage(result.url, result.source)
@@ -293,8 +296,8 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
               <div className="flex-1 h-px bg-stone-200" />
             </div>
 
-            {/* Face photo upload */}
-            <div>
+            {/* Face photo upload — hidden when FACE_MODE_ENABLED = false */}
+            <div className={FACE_MODE_ENABLED ? '' : 'hidden'}>
               <p className="text-[11px] font-bold tracking-wider uppercase text-stone-400 mb-2">
                 顔写真でAI合成（任意）
               </p>
@@ -403,8 +406,8 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ borderColor: text.trim() ? '#a855f740' : '#e7e5e4', color: text.trim() ? '#7c3aed' : '#a8a29e', backgroundColor: text.trim() ? '#faf5ff' : 'transparent' }}>
                   {isAIGenerating
-                    ? <><Loader2 size={15} className="animate-spin" /> {faceImage ? '顔写真でAI生成中...' : 'AIが生成中...'}</>
-                    : <><Sparkles size={15} /> {faceImage ? '顔写真でAI合成する' : 'AIで生成する'}
+                    ? <><Loader2 size={15} className="animate-spin" /> {(FACE_MODE_ENABLED && faceImage) ? '顔写真でAI生成中...' : 'AIが生成中...'}</>
+                    : <><Sparkles size={15} /> {(FACE_MODE_ENABLED && faceImage) ? '顔写真でAI合成する' : 'AIで生成する'}
                       {aiUsageCount > 0 && (
                         <span className="ml-1 text-[11px] opacity-60">
                           (残り{activeLimit - aiUsageCount}回)
