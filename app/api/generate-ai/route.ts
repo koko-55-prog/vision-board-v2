@@ -8,6 +8,8 @@
  *           stable-horde (無料コミュニティGPU、1〜3分)
  */
 
+export const maxDuration = 60  // Vercel: Hobby=60s, Pro=300s
+
 type Provider = 'replicate' | 'huggingface' | 'stable-horde'
 const ACTIVE_PROVIDER: Provider = 'replicate'
 

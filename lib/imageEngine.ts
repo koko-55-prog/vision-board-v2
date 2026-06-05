@@ -1,3 +1,14 @@
+/**
+ * Image Engine
+ *
+ * 外部API呼び出しはすべてサーバーサイドAPIルート経由。
+ * クライアント側にAPIキーは一切露出しない。
+ *
+ * Pexels検索  → /api/search-pexels  (PEXELS_API_KEY)
+ * AI生成      → /api/generate-ai    (REPLICATE_API_TOKEN など)
+ * 画像プロキシ → /api/proxy-image   (CORS回避)
+ */
+
 import { ImageSource } from './types'
 
 export interface ImageResult {
@@ -32,26 +43,34 @@ function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.85): Pr
   })
 }
 
-// Fetch an external image via our Next.js server-side proxy (bypasses CORS)
-async function fetchViaProxy(externalUrl: string, timeoutMs = 30000): Promise<string> {
-  const res = await fetch(
-    `/api/proxy-image?url=${encodeURIComponent(externalUrl)}`,
-    { signal: AbortSignal.timeout(timeoutMs) }
-  )
-  if (!res.ok) throw new Error(`Proxy ${res.status}`)
-  const blob = await res.blob()
-  const raw = await blobToDataUrl(blob)
-  return compressToJpeg(raw)
-}
-
-// ── Quality boost automatically appended to all AI prompts ────────────────────
+// ── Quality boost appended to all AI prompts ──────────────────────────────────
 
 const QUALITY_BOOST =
   'photorealistic, 8k resolution, cinematic lighting, highly aesthetic, masterpiece, professional photography'
 
-// ── AI Image Generation ───────────────────────────────────────────────────────
-// Calls app/api/generate-ai/route.ts (server-side).
-// To switch AI provider, only that route file needs to change.
+// ── Pexels Photo Search (server-side route) ───────────────────────────────────
+
+export async function fetchVisionImageReal(query: string): Promise<ImageResult> {
+  try {
+    const res = await fetch(
+      `/api/search-pexels?q=${encodeURIComponent(query)}`,
+      { signal: AbortSignal.timeout(30000) }
+    )
+    if (res.ok) {
+      const blob = await res.blob()
+      const raw = await blobToDataUrl(blob)
+      return { url: await compressToJpeg(raw), source: 'pexels' }
+    }
+    if (res.status !== 404) console.warn('Pexels search error:', res.status)
+  } catch (err) {
+    console.warn('Pexels search failed:', err)
+  }
+  // Fall back to AI generation
+  return fetchPollinationsImage(query)
+}
+
+// ── AI Image Generation (server-side route) ───────────────────────────────────
+// Provider is configured in app/api/generate-ai/route.ts
 
 export async function fetchPollinationsImage(query: string): Promise<ImageResult> {
   const prompt = `${query}, ${QUALITY_BOOST}`
@@ -60,7 +79,7 @@ export async function fetchPollinationsImage(query: string): Promise<ImageResult
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt }),
-    signal: AbortSignal.timeout(120000),  // 2 min — Replicate is fast (~10s), Horde is slow (~3min)
+    signal: AbortSignal.timeout(120000),
   })
 
   if (!res.ok) {
@@ -71,32 +90,6 @@ export async function fetchPollinationsImage(query: string): Promise<ImageResult
   const blob = await res.blob()
   const raw = await blobToDataUrl(blob)
   return { url: await compressToJpeg(raw), source: 'pollinations' }
-}
-
-// ── Pexels Photo Search ───────────────────────────────────────────────────────
-
-export async function fetchVisionImageReal(query: string): Promise<ImageResult> {
-  const apiKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY
-  if (apiKey) {
-    try {
-      const res = await fetch(
-        `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&orientation=landscape`,
-        { headers: { Authorization: apiKey } }
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (data.photos?.length > 0) {
-          const pick = data.photos[Math.floor(Math.random() * Math.min(8, data.photos.length))]
-          try {
-            return { url: await fetchViaProxy(pick.src.medium || pick.src.small), source: 'pexels' }
-          } catch {
-            return { url: pick.src.large || pick.src.medium, source: 'pexels' }
-          }
-        }
-      }
-    } catch { /* fall through to AI */ }
-  }
-  return fetchPollinationsImage(query)
 }
 
 // ── Image Upload ──────────────────────────────────────────────────────────────

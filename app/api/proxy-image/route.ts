@@ -1,6 +1,8 @@
 // Server-side image proxy — no CORS restrictions on the server side.
 // Handles Pollinations queue-full (402) with automatic retry.
 
+export const maxDuration = 30
+
 const ALLOWED_HOSTS = ['image.pollinations.ai', 'images.pexels.com']
 const MAX_RETRIES = 3
 const RETRY_WAIT_MS = 15000  // Pollinations queue clears in ~15s
