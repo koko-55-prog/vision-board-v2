@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, RefreshCw, Search, Loader2, CheckCircle2, Sparkles, Upload } from 'lucide-react'
+import { X, RefreshCw, Search, Loader2, CheckCircle2, Sparkles, Upload, UserCircle2 } from 'lucide-react'
 import { VisionCard, Lane, LaneId, ImageSource } from '@/lib/types'
 import { questions } from '@/lib/questions'
-import { fetchVisionImageReal, fetchPollinationsImage, uploadImageFile } from '@/lib/imageEngine'
+import { fetchVisionImageReal, fetchPollinationsImage, fetchFaceImage, uploadImageFile, compressFaceForStorage } from '@/lib/imageEngine'
 
 interface AddVisionModalProps {
   lanes: Lane[]
@@ -89,6 +89,36 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     }
   }
 
+  // Face photo — localStorage persistence
+  const FACE_KEY = 'vb:face-image'
+  const faceInputRef = useRef<HTMLInputElement>(null)
+  const [faceImage, setFaceImage] = useState<string | null>(null)
+  const [isFaceDragging, setIsFaceDragging] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(FACE_KEY)
+    if (stored) setFaceImage(stored)
+  }, [])
+
+  const handleFaceFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const compressed = await compressFaceForStorage(file)
+    localStorage.setItem(FACE_KEY, compressed)
+    setFaceImage(compressed)
+  }
+
+  const clearFaceImage = () => {
+    localStorage.removeItem(FACE_KEY)
+    setFaceImage(null)
+  }
+
+  const onFaceDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsFaceDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFaceFile(file)
+  }
+
   const isAnyLoading = isPexelsSearching || isAIGenerating || isUploading
   const currentQuestion = questions[qIndex]
   const selectedLane = lanes.find(l => l.id === selectedLaneId) || lanes[0]
@@ -128,13 +158,15 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
     setImageUrl(null)
     setFetchError(null)
     try {
-      const result = await fetchPollinationsImage(text)
+      const result = faceImage
+        ? await fetchFaceImage(text, faceImage)
+        : await fetchPollinationsImage(text)
       setImage(result.url, result.source)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'AI生成に失敗しました。'
       setFetchError(msg)
     } finally { setIsAIGenerating(false) }
-  }, [text, isAnyLoading, isAILocked, aiUsageCount])
+  }, [text, isAnyLoading, isAILocked, aiUsageCount, faceImage])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -261,6 +293,52 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
               <div className="flex-1 h-px bg-stone-200" />
             </div>
 
+            {/* Face photo upload */}
+            <div>
+              <p className="text-[11px] font-bold tracking-wider uppercase text-stone-400 mb-2">
+                顔写真でAI合成（任意）
+              </p>
+              {faceImage ? (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border border-stone-200 bg-stone-50">
+                  <img src={faceImage} alt="face" className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white shadow" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-stone-700">顔写真が設定されています</p>
+                    <p className="text-[10px] text-stone-400 mt-0.5">次回以降も自動で使います</p>
+                  </div>
+                  <button onClick={clearFaceImage} className="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center transition-colors flex-shrink-0">
+                    <X size={12} className="text-stone-500" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => faceInputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setIsFaceDragging(true) }}
+                  onDragLeave={() => setIsFaceDragging(false)}
+                  onDrop={onFaceDrop}
+                  className="flex flex-col items-center justify-center gap-1.5 px-4 py-4 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200"
+                  style={{ borderColor: isFaceDragging ? '#a855f7' : '#d6d3d1', backgroundColor: isFaceDragging ? '#faf5ff' : 'transparent' }}
+                >
+                  <UserCircle2 size={22} className="text-stone-300" />
+                  <p className="text-xs text-stone-400 text-center leading-relaxed">
+                    顔写真をドロップ、またはタップして選択
+                    <br />
+                    <span className="text-[10px]">スマホはカメラ撮影も可</span>
+                  </p>
+                </div>
+              )}
+              <input
+                ref={faceInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleFaceFile(f); e.target.value = '' }}
+              />
+              <p className="text-[10px] text-stone-400 leading-relaxed mt-1.5">
+                ※ご安心ください：アップロードされたお写真はAI生成の処理にのみ一時的に使用され、保存や学習に利用されることは一切ありません
+              </p>
+            </div>
+
             {/* AI generate */}
             {isAILocked ? (
               isMonitorMaxed ? (
@@ -325,8 +403,8 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ borderColor: text.trim() ? '#a855f740' : '#e7e5e4', color: text.trim() ? '#7c3aed' : '#a8a29e', backgroundColor: text.trim() ? '#faf5ff' : 'transparent' }}>
                   {isAIGenerating
-                    ? <><Loader2 size={15} className="animate-spin" /> AIが生成中...</>
-                    : <><Sparkles size={15} /> AIで生成する
+                    ? <><Loader2 size={15} className="animate-spin" /> {faceImage ? '顔写真でAI生成中...' : 'AIが生成中...'}</>
+                    : <><Sparkles size={15} /> {faceImage ? '顔写真でAI合成する' : 'AIで生成する'}
                       {aiUsageCount > 0 && (
                         <span className="ml-1 text-[11px] opacity-60">
                           (残り{activeLimit - aiUsageCount}回)
@@ -367,7 +445,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                 {!isImgLoading && (
                   <div className="absolute bottom-2 right-2">
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.52)', color: 'white' }}>
-                      {imageSource === 'huggingface' ? '🤗 HF生成' : imageSource === 'pollinations' ? '✦ AI生成' : imageSource === 'upload' ? '📁 アップロード' : '📷 Pexels'}
+                      {imageSource === 'face-ai' ? '✦ 顔写真AI' : imageSource === 'huggingface' ? '🤗 HF生成' : imageSource === 'pollinations' ? '✦ AI生成' : imageSource === 'upload' ? '📁 アップロード' : '📷 Pexels'}
                     </span>
                   </div>
                 )}

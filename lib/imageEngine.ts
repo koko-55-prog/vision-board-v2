@@ -99,6 +99,35 @@ export async function uploadImageFile(file: File): Promise<ImageResult> {
   return { url: await compressToJpeg(raw), source: 'upload' }
 }
 
+// ── Face Photo Utils ──────────────────────────────────────────────────────────
+
+// Resize to 480px max and compress for localStorage (target: ~30–60 KB base64)
+export async function compressFaceForStorage(file: File): Promise<string> {
+  const raw = await blobToDataUrl(file)
+  return compressToJpeg(raw, 480, 480, 0.70)
+}
+
+// Face-preserving AI generation via /api/generate-face (PuLID-Flux)
+export async function fetchFaceImage(query: string, faceBase64: string): Promise<ImageResult> {
+  const prompt = `${query}, ${QUALITY_BOOST}`
+
+  const res = await fetch('/api/generate-face', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, face_image: faceBase64 }),
+    signal: AbortSignal.timeout(120000),
+  })
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => '')
+    throw new Error(`Face AI generation failed (${res.status}): ${msg.slice(0, 100)}`)
+  }
+
+  const blob = await res.blob()
+  const raw = await blobToDataUrl(blob)
+  return { url: await compressToJpeg(raw), source: 'face-ai' }
+}
+
 // Prototype mock (unused in production)
 export async function fetchVisionImage(query: string): Promise<ImageResult> {
   await new Promise(r => setTimeout(r, 900 + Math.random() * 700))

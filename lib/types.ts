@@ -1,5 +1,5 @@
 export type LaneId = 'origin' | '1year' | '3year' | '5year' | 'life'
-export type ImageSource = 'pexels' | 'pollinations' | 'huggingface' | 'upload' | 'mock'
+export type ImageSource = 'pexels' | 'pollinations' | 'huggingface' | 'upload' | 'mock' | 'face-ai'
 
 export interface VisionCard {
   id: string
