@@ -222,8 +222,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
           </button>
         </div>
 
-        <div className="relative flex-1 min-h-0">
-        <div className="absolute inset-0 overflow-y-auto scrollbar-hide px-5 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 space-y-4">
           {/* Question */}
           {!isEditing && (
             <div className="rounded-2xl p-4 transition-colors duration-300" style={{ backgroundColor: selectedLane.color }}>
@@ -458,10 +457,6 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
             )}
           </div>
         </div>
-        {/* Scroll fade indicator */}
-        <div className="pointer-events-none absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white/90 to-transparent" />
-        </div>
-
         {/* Footer */}
         <div className="px-5 py-3 border-t border-stone-100 flex gap-3 flex-shrink-0">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">
