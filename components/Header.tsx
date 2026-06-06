@@ -1,6 +1,8 @@
 'use client'
 
-import { Plus, Download, ChevronDown, Loader2, Undo2 } from 'lucide-react'
+import { Plus, Download, ChevronDown, Loader2, Undo2, UserCircle2 } from 'lucide-react'
+
+const GENDER_LABEL: Record<string, string> = { male: '男性', female: '女性', unspecified: '指定なし' }
 
 interface HeaderProps {
   boardName: string
@@ -11,9 +13,11 @@ interface HeaderProps {
   onUndo: () => void
   canUndo: boolean
   undoCount: number
+  onGenderSettings: () => void
+  currentGender: string | null
 }
 
-export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount }: HeaderProps) {
+export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount, onGenderSettings, currentGender }: HeaderProps) {
   return (
     <header
       className="flex-shrink-0 flex flex-col border-b"
@@ -56,6 +60,18 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
 
         {/* Right: actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          {/* AI gender settings */}
+          {currentGender && (
+            <button
+              onClick={onGenderSettings}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-all"
+              title="AI生成の性別設定を変更"
+            >
+              <UserCircle2 size={14} />
+              <span className="hidden sm:inline text-xs">{GENDER_LABEL[currentGender] ?? 'AI設定'}</span>
+            </button>
+          )}
+
           {/* Undo */}
           <button
             onClick={onUndo}

@@ -6,6 +6,7 @@ import { TimelineLane } from './TimelineLane'
 import { AddVisionModal } from './AddVisionModal'
 import { BoardManager } from './BoardManager'
 import { Header } from './Header'
+import { OnboardingModal, type Gender } from './OnboardingModal'
 import * as storage from '@/lib/storage'
 
 export const LANES: Lane[] = [
@@ -28,6 +29,10 @@ const INITIAL_CARDS: VisionCard[] = [
   { id: 'v-5year-2', text: '【サンプル】海外のジムにお邪魔してワークアウト、現地のトレーナーや仲間とハイタッチしている！', imageUrl: '/default-imgs/v-5year-2.jpg', laneId: '5year', rotation: -3, createdAt: new Date(), imageSource: 'pexels' },
 ]
 
+const INITIAL_IDS = new Set(INITIAL_CARDS.map(c => c.id))
+const isSampleOnly = (cards: VisionCard[]) =>
+  cards.length > 0 && cards.every(c => INITIAL_IDS.has(c.id))
+
 export function VisionBoard() {
   const [cards, setCards] = useState<VisionCard[]>(INITIAL_CARDS)
   const [boards, setBoards] = useState<Board[]>([])
@@ -39,6 +44,31 @@ export function VisionBoard() {
   const [editingCard, setEditingCard] = useState<VisionCard | null>(null)
   const [showBoardManager, setShowBoardManager] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+
+  // ── Onboarding & Gender settings ─────────────────────────────────────────
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showGenderSettings, setShowGenderSettings] = useState(false)
+  const [currentGender, setCurrentGender] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCurrentGender(localStorage.getItem('vb:gender'))
+  }, [])
+
+  // Show the start banner when: loaded + sample cards only + not yet onboarded
+  const showSampleBanner = isLoaded && !currentGender && isSampleOnly(cards)
+
+  const handleOnboardingSelect = (gender: Gender) => {
+    localStorage.setItem('vb:gender', gender)
+    setCurrentGender(gender)
+    setCards([])
+    setShowOnboarding(false)
+  }
+
+  const handleGenderChange = (gender: Gender) => {
+    localStorage.setItem('vb:gender', gender)
+    setCurrentGender(gender)
+    setShowGenderSettings(false)
+  }
   const saveTimer = useRef<ReturnType<typeof setTimeout>>()
 
   // ── Load from localStorage on mount ──────────────────────────────────────
@@ -244,9 +274,11 @@ export function VisionBoard() {
         onUndo={undo}
         canUndo={undoCount > 0}
         undoCount={undoCount}
+        onGenderSettings={() => setShowGenderSettings(true)}
+        currentGender={currentGender}
       />
 
-      <main style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      <main style={{ flex: 1, overflow: 'hidden', minHeight: 0, position: 'relative' }}>
         <div className="lanes-scroll" style={{ height: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
           <div id="board-lanes-inner" style={{ display: 'flex', height: '100%' }}>
             {LANES.map((lane, index) => (
@@ -260,6 +292,60 @@ export function VisionBoard() {
             ))}
           </div>
         </div>
+
+        {/* Centered floating CTA — shows when sample board is displayed */}
+        {showSampleBanner && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 20 }}
+          >
+            <div
+              className="pointer-events-auto flex flex-col items-center gap-4 px-8 py-7 rounded-3xl mx-4"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.94)',
+                backdropFilter: 'blur(18px)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.20), 0 6px 20px rgba(0,0,0,0.10)',
+                border: '1px solid rgba(255,255,255,0.85)',
+                maxWidth: '420px',
+                width: '100%',
+              }}
+            >
+              {/* Logo */}
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
+              >
+                ✦
+              </div>
+
+              {/* Text */}
+              <div className="text-center">
+                <p className="text-[11px] font-bold tracking-widest uppercase text-stone-400 mb-1">Sample Board</p>
+                <p className="text-base font-semibold text-stone-700 leading-snug">
+                  あなただけのビジョンボードを
+                  <br />作りましょう
+                </p>
+              </div>
+
+              {/* CTA button */}
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-95 w-full justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)',
+                  boxShadow: '0 4px 18px rgba(217,119,6,0.40)',
+                }}
+              >
+                サンプルをリセットして作成を始める
+                <span className="text-base">→</span>
+              </button>
+
+              <p className="text-[10px] text-stone-400">
+                タップするとサンプルが消えて、空のボードになります
+              </p>
+            </div>
+          </div>
+        )}
       </main>
 
       {isModalOpen && (
@@ -276,6 +362,18 @@ export function VisionBoard() {
           onSwitch={switchBoard} onCreate={createBoard}
           onRename={renameBoard} onDelete={deleteBoard}
           onClose={() => setShowBoardManager(false)}
+        />
+      )}
+
+      {showOnboarding && (
+        <OnboardingModal onSelect={handleOnboardingSelect} mode="onboard" />
+      )}
+
+      {showGenderSettings && (
+        <OnboardingModal
+          onSelect={handleGenderChange}
+          mode="settings"
+          onClose={() => setShowGenderSettings(false)}
         />
       )}
     </div>

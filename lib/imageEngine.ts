@@ -45,10 +45,26 @@ function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.85): Pr
 
 // ── Prompt style constants ────────────────────────────────────────────────────
 
-// First-person immersive POV — applied to all AI-generated images
-const POV_STYLE =
-  'first-person point of view, seen through my own eyes, immersive perspective, ' +
-  'over-the-shoulder or hand visible in frame, close-up environmental details, no faces shown'
+const GENDER_PROMPTS = {
+  male:
+    "First-person POV from a man's perspective, reflecting a man's lifestyle and presence. " +
+    'The AI should naturally decide the best framing for maximum immersion—whether that means ' +
+    'capturing a pure breathtaking view, or subtly including masculine elements ' +
+    '(like a sleeve, watch, or footwear) if it enhances the scene.',
+  female:
+    "First-person POV from a woman's perspective, reflecting a woman's lifestyle and aesthetics. " +
+    'The AI should naturally decide the best framing for maximum immersion—whether that means ' +
+    'capturing a pure breathtaking view, or subtly including feminine elements ' +
+    '(like a soft sleeve, accessory, or footwear) if it enhances the scene.',
+  unspecified:
+    'Pure first-person POV scenery, focusing entirely on the beautiful environment without any human elements.',
+}
+
+function getGenderPrompt(): string {
+  if (typeof window === 'undefined') return GENDER_PROMPTS.unspecified
+  const gender = localStorage.getItem('vb:gender') ?? 'unspecified'
+  return GENDER_PROMPTS[gender as keyof typeof GENDER_PROMPTS] ?? GENDER_PROMPTS.unspecified
+}
 
 const QUALITY_BOOST =
   'photorealistic, 8k resolution, cinematic lighting, highly aesthetic, masterpiece, professional photography'
@@ -78,7 +94,7 @@ export async function fetchVisionImageReal(query: string): Promise<ImageResult> 
 // Provider is configured in app/api/generate-ai/route.ts
 
 export async function fetchPollinationsImage(query: string): Promise<ImageResult> {
-  const prompt = `${POV_STYLE}, ${query}, ${QUALITY_BOOST}`
+  const prompt = `${getGenderPrompt()}, ${query}, ${QUALITY_BOOST}`
 
   const res = await fetch('/api/generate-ai', {
     method: 'POST',
@@ -114,7 +130,7 @@ export async function compressFaceForStorage(file: File): Promise<string> {
 
 // Face-preserving AI generation — client-side polling to avoid Vercel 60s timeout
 export async function fetchFaceImage(query: string, faceBase64: string): Promise<ImageResult> {
-  const prompt = `${POV_STYLE}, ${query}, ${QUALITY_BOOST}`
+  const prompt = `${getGenderPrompt()}, ${query}, ${QUALITY_BOOST}`
 
   // Step 1: Start prediction (returns {id} immediately)
   const startRes = await fetch('/api/generate-face', {
