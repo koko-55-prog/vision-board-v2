@@ -222,7 +222,8 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-hide px-7 py-6 space-y-5">
+        <div className="relative flex-1 min-h-0">
+        <div className="overflow-y-auto scrollbar-hide h-full px-7 py-6 space-y-5">
           {/* Question */}
           {!isEditing && (
             <div className="rounded-2xl p-4 transition-colors duration-300" style={{ backgroundColor: selectedLane.color }}>
@@ -281,12 +282,12 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                 className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium border-2 border-dashed transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ borderColor: '#d6d3d1', color: isUploading ? '#a8a29e' : '#57534e', backgroundColor: 'transparent' }}>
                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                <span>{isUploading ? 'Loading' : 'アップロード'}</span>
+                <span>{isUploading ? '読み込み中' : 'アップロード'}</span>
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
             <p className="text-[10px] leading-relaxed mt-2" style={{ color: '#b5b0a8' }}>
-              ※本アプリはサーバーを持っていません。テキストやアップロードした画像は、あなたがお使いのブラウザ内（localStorage）でのみ処理・保存されます。外部に送信されたり、開発者を含め第三者に見られることはありませんのでご安心ください。
+              ※画像・テキストはあなたのデバイス上のブラウザ（localStorage）内だけに保存されます。外部への送信や第三者への共有は一切ありません。
             </p>
 
             {/* Divider */}
@@ -360,9 +361,10 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <span className="text-base">🔒</span>
-                    <p className="text-sm font-semibold text-amber-800">
-                      AI生成の無料枠を使い切りました（{AI_LIMIT}/{AI_LIMIT}回）
-                    </p>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">AI生成の無料枠（{AI_LIMIT}回）を使い切りました</p>
+                      <p className="text-xs text-amber-700 mt-0.5">合言葉をお持ちの方は追加で利用できます</p>
+                    </div>
                   </div>
                   {showPassphrase ? (
                     <div className="space-y-1.5">
@@ -455,6 +457,9 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
               </div>
             )}
           </div>
+        </div>
+        {/* Scroll fade indicator */}
+        <div className="pointer-events-none absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white/90 to-transparent" />
         </div>
 
         {/* Footer */}
