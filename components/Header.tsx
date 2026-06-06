@@ -26,24 +26,25 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
         zIndex: 30,
       }}
     >
-      {/* Main row — always visible */}
-      <div className="flex items-center justify-between px-6 h-16 gap-3">
+      {/* Row 1: logo + actions (always visible, compact on mobile) */}
+      <div className="flex items-center justify-between px-4 sm:px-6 h-14 gap-2">
 
-        {/* Left: logo + VISION BOARD + board name (desktop only) */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Left: logo + brand + board name (desktop only) */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
           >
             ✦
           </div>
+          {/* Brand text — desktop only */}
           <p
-            className="leading-none tracking-[0.14em] text-stone-900 font-bold flex-shrink-0"
+            className="hidden sm:block leading-none tracking-[0.14em] text-stone-900 font-bold flex-shrink-0"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '18px' }}
           >
             VISION BOARD
           </p>
-          {/* Board name selector — desktop only */}
+          {/* Board name — desktop only */}
           <button
             onClick={onBoardManagerClick}
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors min-w-0 max-w-[180px]"
@@ -54,12 +55,12 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
         </div>
 
         {/* Right: actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* Undo */}
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="元に戻す (⌘Z)"
           >
             <Undo2 size={14} />
@@ -75,7 +76,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           <button
             onClick={onDownload}
             disabled={isDownloading}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-50 transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-50 transition-all"
             title="画像として保存"
           >
             {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
@@ -85,23 +86,29 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           {/* Add vision */}
           <button
             onClick={onAddClick}
-            className="flex items-center gap-1.5 text-sm font-medium text-white rounded-full transition-all duration-200 hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: '#1c1917', padding: '8px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+            className="flex items-center gap-1 sm:gap-1.5 text-sm font-medium text-white rounded-full transition-all duration-200 hover:opacity-90 active:scale-95"
+            style={{ backgroundColor: '#1c1917', padding: '8px 12px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
           >
             <Plus size={15} strokeWidth={2.5} />
-            <span>ビジョンを追加</span>
+            <span className="hidden sm:inline">ビジョンを追加</span>
           </button>
         </div>
       </div>
 
-      {/* Board name row — mobile only (2nd row) */}
-      <div className="sm:hidden px-6 pb-3">
+      {/* Row 2: mobile only — brand name + board name */}
+      <div className="sm:hidden flex items-center gap-2 px-4 pb-2">
+        <p
+          className="leading-none tracking-[0.12em] text-stone-800 font-bold flex-shrink-0 text-[15px]"
+          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
+        >
+          VISION BOARD
+        </p>
         <button
           onClick={onBoardManagerClick}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors w-full"
+          className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors min-w-0"
         >
-          <span className="text-sm font-semibold text-stone-700">{boardName}</span>
-          <ChevronDown size={13} className="text-stone-400 flex-shrink-0" />
+          <span className="text-sm font-semibold text-stone-600 truncate">{boardName}</span>
+          <ChevronDown size={12} className="text-stone-400 flex-shrink-0" />
         </button>
       </div>
     </header>

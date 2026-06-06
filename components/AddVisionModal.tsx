@@ -210,10 +210,10 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         <div className="h-1 w-full flex-shrink-0 transition-colors duration-300" style={{ backgroundColor: selectedLane.accentColor }} />
 
         {/* Header */}
-        <div className="px-7 pt-6 pb-5 border-b border-stone-100 flex-shrink-0 flex items-center justify-between">
+        <div className="px-5 pt-3 pb-3 border-b border-stone-100 flex-shrink-0 flex items-center justify-between">
           <div>
-            <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-stone-400">Vision Board</p>
-            <h2 className="text-2xl font-bold text-stone-900 mt-0.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
+            <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-stone-400">Vision Board</p>
+            <h2 className="text-xl font-bold text-stone-900 mt-0.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {isEditing ? 'ビジョンを編集' : 'ビジョンを追加'}
             </h2>
           </div>
@@ -223,7 +223,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         </div>
 
         <div className="relative flex-1 min-h-0">
-        <div className="overflow-y-auto scrollbar-hide h-full px-7 py-6 space-y-5">
+        <div className="absolute inset-0 overflow-y-auto scrollbar-hide px-5 py-4 space-y-4">
           {/* Question */}
           {!isEditing && (
             <div className="rounded-2xl p-4 transition-colors duration-300" style={{ backgroundColor: selectedLane.color }}>
@@ -463,7 +463,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         </div>
 
         {/* Footer */}
-        <div className="px-7 py-5 border-t border-stone-100 flex gap-3 flex-shrink-0">
+        <div className="px-5 py-3 border-t border-stone-100 flex gap-3 flex-shrink-0">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">
             キャンセル
           </button>
