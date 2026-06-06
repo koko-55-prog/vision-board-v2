@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Trash2, ArrowRight, Pencil } from 'lucide-react'
+import { Trash2, ArrowRight, Pencil, Download } from 'lucide-react'
 import { VisionCard as VisionCardType, Lane, LaneId } from '@/lib/types'
 
 interface VisionCardProps {
@@ -62,6 +62,14 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation()
     onEdit(card.id)
+  }
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const a = document.createElement('a')
+    a.href = card.imageUrl
+    a.download = `vision-${card.id.slice(-6)}.jpg`
+    a.click()
   }
 
   // Mobile: tap card body to toggle action buttons
@@ -191,6 +199,16 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
               </div>
             )}
           </div>
+
+          {/* Download */}
+          <button
+            onClick={handleDownload}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-green-50"
+            style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)', boxShadow: '0 1px 4px rgba(0,0,0,0.16)' }}
+            title="画像をダウンロード"
+          >
+            <Download size={12} className="text-stone-500" />
+          </button>
 
           {/* Delete */}
           <button

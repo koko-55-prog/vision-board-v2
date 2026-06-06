@@ -43,7 +43,12 @@ function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.85): Pr
   })
 }
 
-// ── Quality boost appended to all AI prompts ──────────────────────────────────
+// ── Prompt style constants ────────────────────────────────────────────────────
+
+// First-person immersive POV — applied to all AI-generated images
+const POV_STYLE =
+  'first-person point of view, seen through my own eyes, immersive perspective, ' +
+  'over-the-shoulder or hand visible in frame, close-up environmental details, no faces shown'
 
 const QUALITY_BOOST =
   'photorealistic, 8k resolution, cinematic lighting, highly aesthetic, masterpiece, professional photography'
@@ -73,7 +78,7 @@ export async function fetchVisionImageReal(query: string): Promise<ImageResult> 
 // Provider is configured in app/api/generate-ai/route.ts
 
 export async function fetchPollinationsImage(query: string): Promise<ImageResult> {
-  const prompt = `${query}, ${QUALITY_BOOST}`
+  const prompt = `${POV_STYLE}, ${query}, ${QUALITY_BOOST}`
 
   const res = await fetch('/api/generate-ai', {
     method: 'POST',
@@ -109,7 +114,7 @@ export async function compressFaceForStorage(file: File): Promise<string> {
 
 // Face-preserving AI generation — client-side polling to avoid Vercel 60s timeout
 export async function fetchFaceImage(query: string, faceBase64: string): Promise<ImageResult> {
-  const prompt = `${query}, ${QUALITY_BOOST}`
+  const prompt = `${POV_STYLE}, ${query}, ${QUALITY_BOOST}`
 
   // Step 1: Start prediction (returns {id} immediately)
   const startRes = await fetch('/api/generate-face', {
