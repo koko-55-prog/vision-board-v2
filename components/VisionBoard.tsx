@@ -20,9 +20,12 @@ const ROTATIONS = [-3, -2, -1, 1, 2, 3]
 const genId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 
 const INITIAL_CARDS: VisionCard[] = [
-  { id: 'sample-1', text: '子どもの頃、図書館で本を読みふけった夏の記憶', imageUrl: 'https://picsum.photos/seed/library42/800/600', laneId: 'origin', rotation: -2, createdAt: new Date(), imageSource: 'mock' },
-  { id: 'sample-2', text: '毎朝コーヒーを飲みながら、静かに日記を書く習慣', imageUrl: 'https://picsum.photos/seed/morningcoffee/800/600', laneId: '1year', rotation: 2, createdAt: new Date(), imageSource: 'mock' },
-  { id: 'sample-3', text: '海の見えるテラスで、好きな仕事をする', imageUrl: 'https://picsum.photos/seed/oceanterrace/800/600', laneId: '5year', rotation: -1, createdAt: new Date(), imageSource: 'mock' },
+  { id: 'v-koremade-1', text: '【サンプル】お気に入りのカフェで、淹れたてのカフェラテとスコーンを前に、スマホを眺めてリラックス', imageUrl: '/default-imgs/v-koremade-1.jpg', laneId: 'origin', rotation: -2, createdAt: new Date(), imageSource: 'pexels' },
+  { id: 'v-koremade-2', text: '【サンプル】お気に入りのウェアを着て、自宅のヨガマットの上で、気持ちよくストレッチ', imageUrl: '/default-imgs/v-koremade-2.jpg', laneId: 'origin', rotation: 2, createdAt: new Date(), imageSource: 'pexels' },
+  { id: 'v-1year-1', text: '【サンプル】旅行で訪れた海外の海が見えるオープンカフェのテラス席で、英語の勉強をしながら、お気に入りのコーヒーを楽しんでいる。周りには現地の外国人が歩いている。', imageUrl: '/default-imgs/v-1year-1.jpg', laneId: '1year', rotation: 1, createdAt: new Date(), imageSource: 'pexels' },
+  { id: 'v-1year-2', text: '【サンプル】筋トレを始めて、一歩進んだワークアウト開始。三日坊主にならずに続いている！', imageUrl: '/default-imgs/v-1year-2.jpg', laneId: '1year', rotation: -1, createdAt: new Date(), imageSource: 'pexels' },
+  { id: 'v-5year-1', text: '【サンプル】オーストラリアのカフェのテラス席で、現地の友人3人と笑顔で爆笑しながら、クロワッサンとカフェラテを楽しんでいる！', imageUrl: '/default-imgs/v-5year-1.jpg', laneId: '5year', rotation: 3, createdAt: new Date(), imageSource: 'pexels' },
+  { id: 'v-5year-2', text: '【サンプル】海外のジムにお邪魔してワークアウト、現地のトレーナーや仲間とハイタッチしている！', imageUrl: '/default-imgs/v-5year-2.jpg', laneId: '5year', rotation: -3, createdAt: new Date(), imageSource: 'pexels' },
 ]
 
 export function VisionBoard() {
