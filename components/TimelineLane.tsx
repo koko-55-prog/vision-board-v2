@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { VisionCard as VisionCardType, Lane, LaneId } from '@/lib/types'
 import { VisionCard } from './VisionCard'
@@ -19,13 +20,45 @@ interface TimelineLaneProps {
 export function TimelineLane({
   lane, lanes, cards, isFirst, isLast, onAddClick, onMoveCard, onDeleteCard, onEditCard,
 }: TimelineLaneProps) {
+  // dragOverCount avoids flickering when dragging over child elements
+  const [dragOverCount, setDragOverCount] = useState(0)
+  const isDragOver = dragOverCount > 0
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOverCount(c => c + 1)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverCount(c => Math.max(0, c - 1))
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOverCount(0)
+    const cardId = e.dataTransfer.getData('cardId')
+    if (cardId) onMoveCard(cardId, lane.id)
+  }
+
   return (
     <div
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       style={{
         display: 'flex', flexDirection: 'column', height: '100%', flexShrink: 0,
         width: '320px',
-        backgroundColor: lane.color,
+        backgroundColor: isDragOver ? lane.accentColor + '12' : lane.color,
         borderRight: isLast ? 'none' : `1px solid ${lane.borderColor}`,
+        outline: isDragOver ? `2px dashed ${lane.accentColor}` : 'none',
+        outlineOffset: '-3px',
+        transition: 'background-color 0.15s ease, outline 0.15s ease',
       }}
     >
       {/* Lane header */}
@@ -49,10 +82,7 @@ export function TimelineLane({
             {cards.length > 0 && (
               <span
                 className="text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full"
-                style={{
-                  backgroundColor: lane.accentColor + '1a',
-                  color: lane.accentColor,
-                }}
+                style={{ backgroundColor: lane.accentColor + '1a', color: lane.accentColor }}
               >
                 {cards.length}
               </span>
@@ -68,13 +98,23 @@ export function TimelineLane({
         </div>
       </div>
 
+      {/* Drop hint */}
+      {isDragOver && (
+        <div
+          className="mx-4 mt-3 flex-shrink-0 rounded-xl flex items-center justify-center py-3"
+          style={{ border: `2px dashed ${lane.accentColor}`, color: lane.accentColor }}
+        >
+          <span className="text-xs font-semibold">ここにドロップ</span>
+        </div>
+      )}
+
       {/* Cards area */}
       <div
         className="scrollbar-hide"
         data-scroll-area="true"
         style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '4px 18px 48px' }}
       >
-        {cards.length === 0 ? (
+        {cards.length === 0 && !isDragOver ? (
           <button
             onClick={onAddClick}
             className="w-full mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl p-8 border-2 border-dashed transition-all duration-200 group hover:opacity-75"
