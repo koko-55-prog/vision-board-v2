@@ -15,9 +15,10 @@ interface HeaderProps {
   undoCount: number
   onGenderSettings: () => void
   currentGender: string | null
+  onDataInfo: () => void
 }
 
-export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount, onGenderSettings, currentGender }: HeaderProps) {
+export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount, onGenderSettings, currentGender, onDataInfo }: HeaderProps) {
   return (
     <header
       className="flex-shrink-0 flex flex-col border-b"
@@ -60,17 +61,26 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
 
         {/* Right: actions */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          {/* Data info */}
+          <button
+            onClick={onDataInfo}
+            className="flex items-center px-2.5 py-2 rounded-xl border border-stone-200 text-stone-400 hover:bg-stone-50 hover:text-stone-600 transition-all"
+            title="データの保存について"
+          >
+            <span className="text-sm font-bold leading-none">ℹ</span>
+          </button>
+
           {/* AI gender settings */}
-          {currentGender && (
-            <button
-              onClick={onGenderSettings}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-all"
-              title="AI生成の性別設定を変更"
-            >
-              <UserCircle2 size={14} />
-              <span className="hidden sm:inline text-xs">{GENDER_LABEL[currentGender] ?? 'AI設定'}</span>
-            </button>
-          )}
+          <button
+            onClick={onGenderSettings}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-all"
+            title="AI生成の性別設定を変更"
+          >
+            <UserCircle2 size={14} />
+            <span className="hidden sm:inline text-xs">
+              {currentGender ? (GENDER_LABEL[currentGender] ?? 'AI設定') : 'AI設定'}
+            </span>
+          </button>
 
           {/* Undo */}
           <button

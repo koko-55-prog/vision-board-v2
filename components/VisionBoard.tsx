@@ -7,6 +7,7 @@ import { AddVisionModal } from './AddVisionModal'
 import { BoardManager } from './BoardManager'
 import { Header } from './Header'
 import { OnboardingModal, type Gender } from './OnboardingModal'
+import { DataNoticeModal } from './DataNoticeModal'
 import * as storage from '@/lib/storage'
 
 export const LANES: Lane[] = [
@@ -48,6 +49,8 @@ export function VisionBoard() {
   // ── Onboarding & Gender settings ─────────────────────────────────────────
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showGenderSettings, setShowGenderSettings] = useState(false)
+  const [showDataNotice, setShowDataNotice] = useState(false)
+  const [showDataNoticeInfo, setShowDataNoticeInfo] = useState(false)
   const [currentGender, setCurrentGender] = useState<string | null>(null)
 
   useEffect(() => {
@@ -60,8 +63,13 @@ export function VisionBoard() {
   const handleOnboardingSelect = (gender: Gender) => {
     localStorage.setItem('vb:gender', gender)
     setCurrentGender(gender)
-    setCards([])
     setShowOnboarding(false)
+    setShowDataNotice(true)   // 性別選択後にデータ通知を表示
+  }
+
+  const handleDataNoticeClose = () => {
+    setCards([])              // ここでサンプルをリセット
+    setShowDataNotice(false)
   }
 
   const handleGenderChange = (gender: Gender) => {
@@ -276,6 +284,7 @@ export function VisionBoard() {
         undoCount={undoCount}
         onGenderSettings={() => setShowGenderSettings(true)}
         currentGender={currentGender}
+        onDataInfo={() => setShowDataNoticeInfo(true)}
       />
 
       <main style={{ flex: 1, overflow: 'hidden', minHeight: 0, position: 'relative' }}>
@@ -367,6 +376,14 @@ export function VisionBoard() {
 
       {showOnboarding && (
         <OnboardingModal onSelect={handleOnboardingSelect} mode="onboard" />
+      )}
+
+      {showDataNotice && (
+        <DataNoticeModal onClose={handleDataNoticeClose} isOnboarding />
+      )}
+
+      {showDataNoticeInfo && (
+        <DataNoticeModal onClose={() => setShowDataNoticeInfo(false)} />
       )}
 
       {showGenderSettings && (

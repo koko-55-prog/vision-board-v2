@@ -156,7 +156,6 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
 
   const generateAI = useCallback(async () => {
     if (!text.trim() || isAnyLoading || isAILocked) return
-    incrementAIUsage()
     setIsAIGenerating(true)
     setImageUrl(null)
     setFetchError(null)
@@ -165,6 +164,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         ? await fetchFaceImage(text, faceImage)
         : await fetchPollinationsImage(text)
       setImage(result.url, result.source)
+      incrementAIUsage()  // 生成成功後にカウント（失敗時は消費しない）
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'AI生成に失敗しました。'
       setFetchError(msg)
@@ -363,6 +363,28 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
                     <div>
                       <p className="text-sm font-semibold text-amber-800">AI生成の無料枠（{AI_LIMIT}回）を使い切りました</p>
                       <p className="text-xs text-amber-700 mt-0.5">合言葉をお持ちの方は追加で利用できます</p>
+                    </div>
+                  </div>
+
+                  {/* Monitor recruitment notice */}
+                  <div className="rounded-lg border border-amber-300 bg-white p-3 space-y-2 text-xs leading-relaxed">
+                    <p className="text-stone-500">
+                      ※本アプリは現在、開発中のベータ版です。通常はお一人様 <span className="font-semibold">【{AI_LIMIT}回】</span> までAI画像生成をお試しいただけます。
+                    </p>
+                    <div className="border-t border-amber-100 pt-2 space-y-1.5">
+                      <p className="font-semibold text-amber-900">🎁 【先着10名様限定】未来のビジョンを、もっとたくさん描きませんか？</p>
+                      <p className="text-stone-600">
+                        使用後の簡単なアンケートや、SNSでのシェアにご協力いただける「特別モニター」を募集中です。モニターにご応募いただいた方には、<span className="font-semibold text-amber-800">【AI生成回数が{AI_LIMIT}回 → 50回に大幅アップ】</span>する特別ロック解除パスワードを無料で発行いたします！
+                      </p>
+                      <a
+                        href="https://forms.gle/pKadf9qoxuPrx2nn8"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-lg font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+                        style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
+                      >
+                        👉 無料でモニターに応募して、50回作成する
+                      </a>
                     </div>
                   </div>
                   {showPassphrase ? (
