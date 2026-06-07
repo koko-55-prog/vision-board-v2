@@ -17,12 +17,13 @@ export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeMod
 
       {/* Card */}
       <div
-        className="relative w-full max-w-sm rounded-3xl px-8 py-9 flex flex-col gap-5"
+        className="relative w-full max-w-sm rounded-3xl px-8 py-9 flex flex-col gap-5 overflow-y-auto"
         style={{
           backgroundColor: 'rgba(255,255,255,0.97)',
           boxShadow: '0 40px 100px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.10)',
           border: '1px solid rgba(255,255,255,0.8)',
           animation: 'fadeInScale 0.25s ease both',
+          maxHeight: 'calc(100dvh - 3rem)',
         }}
       >
         {/* Header */}
