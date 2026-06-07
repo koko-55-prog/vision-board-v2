@@ -25,9 +25,9 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
       style={{
         position: 'sticky',
         top: 0,
-        backgroundColor: 'rgba(245, 242, 237, 0.95)',
-        backdropFilter: 'blur(14px)',
-        borderBottomColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: 'rgba(190, 235, 245, 0.82)',
+        backdropFilter: 'blur(22px)',
+        borderBottomColor: 'rgba(77, 184, 212, 0.30)',
         zIndex: 30,
       }}
     >
@@ -38,7 +38,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #1a8fa8 0%, #2d6a4f 100%)', boxShadow: '0 0 12px rgba(77,184,212,0.50)' }}
           >
             ✦
           </div>
@@ -64,7 +64,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           {/* Data info */}
           <button
             onClick={onDataInfo}
-            className="flex items-center px-2.5 py-2 rounded-xl border border-stone-200 text-stone-400 hover:bg-stone-50 hover:text-stone-600 transition-all"
+            className="sheikah-glow-hover flex items-center px-2.5 py-2 rounded-xl border border-white/40 text-teal-800 transition-all"
             title="データの保存について"
           >
             <span className="text-sm font-bold leading-none">ℹ</span>
@@ -73,7 +73,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           {/* AI gender settings */}
           <button
             onClick={onGenderSettings}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-all"
+            className="sheikah-glow-hover flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-white/40 text-sm font-medium text-teal-900 transition-all"
             title="AI生成の性別設定を変更"
           >
             <UserCircle2 size={14} />
@@ -86,13 +86,13 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="sheikah-glow-hover relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-white/40 text-sm font-medium text-teal-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="元に戻す (⌘Z)"
           >
             <Undo2 size={14} />
             <span className="hidden sm:inline">元に戻す</span>
             {canUndo && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-stone-700 text-white text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a8fa8, #2d6a4f)' }}>
                 {undoCount > 9 ? '9+' : undoCount}
               </span>
             )}
@@ -102,7 +102,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           <button
             onClick={onDownload}
             disabled={isDownloading}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-stone-200 text-sm font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-50 transition-all"
+            className="sheikah-glow-hover flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-white/40 text-sm font-medium text-teal-900 disabled:opacity-50 transition-all"
             title="画像として保存"
           >
             {isDownloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
@@ -112,8 +112,8 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           {/* Add vision */}
           <button
             onClick={onAddClick}
-            className="flex items-center gap-1 sm:gap-1.5 text-sm font-medium text-white rounded-full transition-all duration-200 hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: '#1c1917', padding: '8px 12px', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+            className="sheikah-btn flex items-center gap-1 sm:gap-1.5 text-sm font-medium text-white rounded-full active:scale-95"
+            style={{ padding: '8px 12px' }}
           >
             <Plus size={15} strokeWidth={2.5} />
             <span className="hidden sm:inline">ビジョンを追加</span>

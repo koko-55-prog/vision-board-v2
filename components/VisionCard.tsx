@@ -113,7 +113,7 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); setShowMoveMenu(false) }}
-        className="relative bg-white select-none"
+        className="relative parchment-card select-none"
         style={{
           padding: '8px 8px 38px',
           borderRadius: '1px',
@@ -121,8 +121,8 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
             ? 'rotate(0deg) scale(1.07) translateY(-6px)'
             : `rotate(${card.rotation}deg) scale(1)`,
           boxShadow: (isHovered || isActive)
-            ? '0 22px 52px rgba(0,0,0,0.22), 0 8px 18px rgba(0,0,0,0.12)'
-            : '0 3px 10px rgba(0,0,0,0.13), 0 1px 3px rgba(0,0,0,0.08)',
+            ? '0 22px 52px rgba(0,0,0,0.20), 0 0 30px rgba(77,184,212,0.40), 0 8px 18px rgba(0,0,0,0.10)'
+            : '0 4px 12px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.08)',
           transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
@@ -139,11 +139,11 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
 
         {/* Polaroid caption */}
         <div className="px-0.5 pt-2.5">
-          <p className="text-xs leading-relaxed text-stone-600 line-clamp-3">
+          <p className="text-xs leading-relaxed line-clamp-3" style={{ color: '#5a4030', fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '13px' }}>
             {card.text}
           </p>
           <div className="mt-1.5">
-            <span className="text-[10px] font-medium" style={{ color: '#c8b9a5' }}>
+            <span className="text-[10px] font-medium" style={{ color: '#a89070' }}>
               {card.imageSource === 'face-ai' ? '✦ 顔写真AI' : card.imageSource === 'pollinations' ? '✦ AI生成' : card.imageSource === 'huggingface' ? '🤗 AI生成' : '📷'}
             </span>
           </div>

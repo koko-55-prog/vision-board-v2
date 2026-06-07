@@ -11,11 +11,11 @@ import { DataNoticeModal } from './DataNoticeModal'
 import * as storage from '@/lib/storage'
 
 export const LANES: Lane[] = [
-  { id: 'origin', title: 'これまでの私', subtitle: 'Origin', color: '#fffbf2', accentColor: '#b45309', borderColor: '#fde68a' },
-  { id: '1year',  title: '1年後までに',  subtitle: '1 Year',  color: '#f2fbf6', accentColor: '#047857', borderColor: '#a7f3d0' },
-  { id: '3year',  title: '3年後までに',  subtitle: '3 Years', color: '#eff6ff', accentColor: '#1d4ed8', borderColor: '#bfdbfe' },
-  { id: '5year',  title: '5年後までに',  subtitle: '5 Years', color: '#f7f4ff', accentColor: '#6d28d9', borderColor: '#ddd6fe' },
-  { id: 'life',   title: '生きている間に', subtitle: 'Life',  color: '#fff3f5', accentColor: '#be123c', borderColor: '#fecdd3' },
+  { id: 'origin', title: 'これまでの私',   subtitle: 'Origin',  color: 'rgba(255, 246, 215, 0.58)', accentColor: '#b56b2a', borderColor: 'rgba(220, 180, 100, 0.38)' },
+  { id: '1year',  title: '1年後までに',    subtitle: '1 Year',  color: 'rgba(210, 248, 228, 0.55)', accentColor: '#2d6a4f', borderColor: 'rgba(80, 190, 135, 0.36)' },
+  { id: '3year',  title: '3年後までに',    subtitle: '3 Years', color: 'rgba(175, 232, 250, 0.40)', accentColor: '#1a7a96', borderColor: 'rgba(77, 184, 212, 0.38)' },
+  { id: '5year',  title: '5年後までに',    subtitle: '5 Years', color: 'rgba(228, 212, 252, 0.58)', accentColor: '#5b3a8c', borderColor: 'rgba(150, 120, 210, 0.36)' },
+  { id: 'life',   title: '生きている間に', subtitle: 'Life',    color: 'rgba(252, 215, 222, 0.58)', accentColor: '#9b2335', borderColor: 'rgba(210, 115, 135, 0.36)' },
 ]
 
 const ROTATIONS = [-3, -2, -1, 1, 2, 3]
@@ -242,7 +242,7 @@ export function VisionBoard() {
 
       // Mount off-screen
       const wrapper = document.createElement('div')
-      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:#f5f2ed;z-index:-1;'
+      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;'
       wrapper.appendChild(clone)
       document.body.appendChild(wrapper)
 
@@ -250,7 +250,7 @@ export function VisionBoard() {
       await new Promise(r => setTimeout(r, 150))
 
       const canvas = await html2canvas(clone, {
-        backgroundColor: '#f5f2ed',
+        backgroundColor: '#a8e6f0',
         scale: 1.5,
         useCORS: true,
         allowTaint: true,
@@ -272,7 +272,7 @@ export function VisionBoard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: '#f5f2ed', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Header
         boardName={boardName}
         onAddClick={() => openModal()}
@@ -311,10 +311,10 @@ export function VisionBoard() {
             <div
               className="pointer-events-auto flex flex-col items-center gap-4 px-8 py-7 rounded-3xl mx-4"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.94)',
-                backdropFilter: 'blur(18px)',
-                boxShadow: '0 24px 80px rgba(0,0,0,0.20), 0 6px 20px rgba(0,0,0,0.10)',
-                border: '1px solid rgba(255,255,255,0.85)',
+                backgroundColor: 'rgba(200, 240, 248, 0.88)',
+                backdropFilter: 'blur(22px)',
+                boxShadow: '0 24px 80px rgba(0,0,0,0.18), 0 0 40px rgba(77,184,212,0.25), 0 6px 20px rgba(0,0,0,0.08)',
+                border: '1px solid rgba(77, 184, 212, 0.35)',
                 maxWidth: '420px',
                 width: '100%',
               }}
@@ -322,15 +322,23 @@ export function VisionBoard() {
               {/* Logo */}
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #1a8fa8 0%, #2d6a4f 100%)', boxShadow: '0 0 16px rgba(77,184,212,0.50)' }}
               >
                 ✦
               </div>
 
               {/* Text */}
               <div className="text-center">
-                <p className="text-[11px] font-bold tracking-widest uppercase text-stone-400 mb-1">Sample Board</p>
-                <p className="text-base font-semibold text-stone-700 leading-snug">
+                <p
+                  className="text-[11px] font-bold tracking-widest uppercase mb-1"
+                  style={{ color: '#1a7a96', fontFamily: 'var(--font-cormorant), Georgia, serif', letterSpacing: '0.22em' }}
+                >
+                  Sample Board
+                </p>
+                <p
+                  className="font-semibold leading-snug text-stone-800"
+                  style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '19px' }}
+                >
                   あなただけのビジョンボードを
                   <br />作りましょう
                 </p>
@@ -339,17 +347,13 @@ export function VisionBoard() {
               {/* CTA button */}
               <button
                 onClick={() => setShowOnboarding(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-95 w-full justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)',
-                  boxShadow: '0 4px 18px rgba(217,119,6,0.40)',
-                }}
+                className="sheikah-btn flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white w-full justify-center"
               >
                 サンプルをリセットして作成を始める
                 <span className="text-base">→</span>
               </button>
 
-              <p className="text-[10px] text-stone-400">
+              <p className="text-[10px]" style={{ color: '#1a7a9688' }}>
                 タップするとサンプルが消えて、空のボードになります
               </p>
             </div>

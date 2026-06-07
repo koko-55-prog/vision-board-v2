@@ -22,23 +22,72 @@ html, body, #__next {
 }
 
 body {
-  background-color: #f5f2ed;
+  background-image: url('/bg-main.jpg');
+  background-size: cover;
+  background-position: center top;
+  background-color: #87d4e0;
   font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic Pro',
     'YuGothic', 'Yu Gothic', 'Meiryo', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Horizontal scroll: show thin scrollbar for discoverability */
+/* ─── Sheikah glow: secondary action buttons ─── */
+.sheikah-glow-hover {
+  transition: box-shadow 0.32s ease, border-color 0.32s ease, color 0.32s ease;
+}
+.sheikah-glow-hover:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px rgba(77, 184, 212, 0.65),
+              0 0 20px rgba(77, 184, 212, 0.50) !important;
+  border-color: rgba(77, 184, 212, 0.70) !important;
+  color: #0d6b7e !important;
+}
+
+/* ─── Sheikah primary button (filled teal) ─── */
+.sheikah-btn {
+  background: linear-gradient(135deg, #1a8fa8 0%, #0d6b7e 100%) !important;
+  box-shadow: 0 2px 14px rgba(26, 143, 168, 0.55) !important;
+  transition: box-shadow 0.32s ease, transform 0.18s ease;
+}
+.sheikah-btn:hover {
+  box-shadow: 0 0 30px rgba(77, 184, 212, 0.70),
+              0 4px 16px rgba(26, 143, 168, 0.50) !important;
+  transform: translateY(-1px);
+}
+.sheikah-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* ─── Lane / empty-state add (+) button: circle glow ─── */
+.sheikah-circle-glow {
+  transition: box-shadow 0.30s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+.sheikah-circle-glow:hover {
+  box-shadow: 0 0 0 4px rgba(77, 184, 212, 0.38),
+              0 0 22px rgba(77, 184, 212, 0.55) !important;
+  transform: scale(1.15) !important;
+}
+.sheikah-circle-glow:active {
+  transform: scale(0.93) !important;
+}
+
+/* ─── Parchment card: real paper texture ─── */
+.parchment-card {
+  background-image: url('/bg-card.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* ─── Horizontal scroll: sheikah-tinted scrollbar ─── */
 .lanes-scroll::-webkit-scrollbar {
   height: 4px;
 }
 .lanes-scroll::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(77, 184, 212, 0.10);
 }
 .lanes-scroll::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.14);
+  background: rgba(77, 184, 212, 0.35);
   border-radius: 2px;
 }
 .lanes-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.26);
+  background: rgba(77, 184, 212, 0.65);
 }

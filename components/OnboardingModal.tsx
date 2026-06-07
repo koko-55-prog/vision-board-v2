@@ -45,7 +45,7 @@ export function OnboardingModal({ onSelect, mode = 'onboard', onClose }: Onboard
         {/* Logo mark */}
         <div
           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-base mb-5 flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #d97706 0%, #be185d 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #1a8fa8 0%, #2d6a4f 100%)', boxShadow: '0 0 18px rgba(77,184,212,0.50)' }}
         >
           ✦
         </div>
