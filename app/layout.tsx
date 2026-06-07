@@ -10,8 +10,24 @@ const cormorant = Cormorant_Garamond({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://vision-board-v2-ivory.vercel.app'),
   title: 'Vision Board — あなたの時間軸に、夢を貼ろう',
   description: '5つの時間軸でビジョンを可視化するタイムラインビジョンボード',
+  openGraph: {
+    title: 'Vision Board — あなたの時間軸に、夢を貼ろう',
+    description: '5つの時間軸でビジョンを可視化するタイムラインビジョンボード',
+    url: 'https://vision-board-v2-ivory.vercel.app',
+    siteName: 'Vision Board',
+    images: [{ url: '/ogp.png', width: 1200, height: 630 }],
+    locale: 'ja_JP',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vision Board — あなたの時間軸に、夢を貼ろう',
+    description: '5つの時間軸でビジョンを可視化するタイムラインビジョンボード',
+    images: ['/ogp.png'],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
