@@ -8,22 +8,23 @@ interface DataNoticeModalProps {
 
 export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="absolute inset-0"
+        className="fixed inset-0"
         style={{ backgroundColor: 'rgba(15,10,5,0.28)', backdropFilter: 'blur(10px)' }}
       />
 
+      {/* Scroll wrapper */}
+      <div className="flex min-h-full items-center justify-center p-6">
       {/* Card */}
       <div
-        className="relative w-full max-w-sm rounded-3xl px-8 py-9 flex flex-col gap-5 overflow-y-auto"
+        className="relative w-full max-w-sm rounded-3xl px-8 py-9 flex flex-col gap-5"
         style={{
           backgroundColor: 'rgba(255,255,255,0.97)',
           boxShadow: '0 40px 100px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.10)',
           border: '1px solid rgba(255,255,255,0.8)',
           animation: 'fadeInScale 0.25s ease both',
-          maxHeight: 'calc(100dvh - 3rem)',
         }}
       >
         {/* Header */}
@@ -110,6 +111,7 @@ export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeMod
           to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
+      </div>
     </div>
   )
 }
