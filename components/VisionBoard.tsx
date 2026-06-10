@@ -284,16 +284,23 @@ export function VisionBoard() {
         el.style.setProperty('display', 'block')
       })
 
-      // Mount off-screen
+      // Header banner (added to DOM so html2canvas captures it without re-encoding)
+      const headerDiv = document.createElement('div')
+      headerDiv.style.cssText = 'padding:12px 20px 8px;background:#a8e6f0;flex-shrink:0;'
+      headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
+
+      // Mount off-screen — flex column so header sits above board
       const wrapper = document.createElement('div')
-      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;'
+      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;display:flex;flex-direction:column;'
+      wrapper.appendChild(headerDiv)
       wrapper.appendChild(clone)
       document.body.appendChild(wrapper)
 
       // Wait for layout + images
       await new Promise(r => setTimeout(r, 150))
 
-      const canvas = await html2canvas(clone, {
+      // Capture wrapper (header + board) in one pass — avoids drawImage re-encoding that degrades colors
+      const canvas = await html2canvas(wrapper, {
         backgroundColor: '#a8e6f0',
         scale: 1.5,
         useCORS: true,
@@ -303,25 +310,9 @@ export function VisionBoard() {
 
       document.body.removeChild(wrapper)
 
-      const scale = 1.5
-      const headerH = Math.round(52 * scale)
-      const final = document.createElement('canvas')
-      final.width = canvas.width
-      final.height = canvas.height + headerH
-      const ctx = final.getContext('2d')!
-      ctx.fillStyle = '#f5f2ed'
-      ctx.fillRect(0, 0, final.width, final.height)
-      ctx.fillStyle = '#1c1917'
-      ctx.font = `bold ${Math.round(13 * scale)}px Georgia, serif`
-      ctx.fillText('VISION BOARD', Math.round(20 * scale), Math.round(22 * scale))
-      ctx.fillStyle = '#78716c'
-      ctx.font = `italic ${Math.round(9 * scale)}px Georgia, serif`
-      ctx.fillText(boardName || 'マイビジョンボード', Math.round(20 * scale), Math.round(38 * scale))
-      ctx.drawImage(canvas, 0, headerH)
-
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = final.toDataURL('image/png')
+      link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
