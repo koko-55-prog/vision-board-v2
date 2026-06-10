@@ -1,19 +1,21 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Trash2, ArrowRight, Pencil, Download } from 'lucide-react'
+import { Trash2, ArrowRight, Pencil, Download, ArrowUp, ArrowDown } from 'lucide-react'
 import { VisionCard as VisionCardType, Lane, LaneId } from '@/lib/types'
 
 interface VisionCardProps {
   card: VisionCardType
   lanes: Lane[]
   index: number
+  totalInLane: number
   onMove: (cardId: string, laneId: LaneId) => void
   onDelete: (cardId: string) => void
   onEdit: (cardId: string) => void
+  onReorder: (cardId: string, direction: 'up' | 'down') => void
 }
 
-export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: VisionCardProps) {
+export function VisionCard({ card, lanes, index, totalInLane, onMove, onDelete, onEdit, onReorder }: VisionCardProps) {
   const [isHovered, setIsHovered] = useState(false)  // desktop hover
   const [isActive, setIsActive] = useState(false)    // mobile tap
   const [showMoveMenu, setShowMoveMenu] = useState(false)
@@ -159,6 +161,24 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
             pointerEvents: showActions ? 'auto' : 'none',
           }}
         >
+          {/* Reorder ↑↓ */}
+          <button
+            onClick={e => { e.stopPropagation(); onReorder(card.id, 'up') }}
+            disabled={index === 0}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)', boxShadow: '0 1px 4px rgba(0,0,0,0.16)' }}
+          >
+            <ArrowUp size={12} className="text-stone-500" />
+          </button>
+          <button
+            onClick={e => { e.stopPropagation(); onReorder(card.id, 'down') }}
+            disabled={index === totalInLane - 1}
+            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)', boxShadow: '0 1px 4px rgba(0,0,0,0.16)' }}
+          >
+            <ArrowDown size={12} className="text-stone-500" />
+          </button>
+
           {/* Edit */}
           <button
             onClick={handleEdit}

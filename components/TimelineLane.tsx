@@ -15,10 +15,11 @@ interface TimelineLaneProps {
   onMoveCard: (cardId: string, laneId: LaneId) => void
   onDeleteCard: (cardId: string) => void
   onEditCard: (cardId: string) => void
+  onReorderCard: (cardId: string, direction: 'up' | 'down') => void
 }
 
 export function TimelineLane({
-  lane, lanes, cards, isFirst, isLast, onAddClick, onMoveCard, onDeleteCard, onEditCard,
+  lane, lanes, cards, isFirst, isLast, onAddClick, onMoveCard, onDeleteCard, onEditCard, onReorderCard,
 }: TimelineLaneProps) {
   // dragOverCount avoids flickering when dragging over child elements
   const [dragOverCount, setDragOverCount] = useState(0)
@@ -140,9 +141,11 @@ export function TimelineLane({
                 card={card}
                 lanes={lanes}
                 index={index}
+                totalInLane={cards.length}
                 onMove={onMoveCard}
                 onDelete={onDeleteCard}
                 onEdit={onEditCard}
+                onReorder={onReorderCard}
               />
             ))}
           </div>

@@ -165,6 +165,24 @@ export function VisionBoard() {
     setCards(prev => prev.filter(c => c.id !== cardId))
   }, [pushUndo])
 
+  const reorderCard = useCallback((cardId: string, direction: 'up' | 'down') => {
+    pushUndo()
+    setCards(prev => {
+      const card = prev.find(c => c.id === cardId)
+      if (!card) return prev
+      const laneCards = prev.filter(c => c.laneId === card.laneId)
+      const laneIdx = laneCards.findIndex(c => c.id === cardId)
+      const swapIdx = direction === 'up' ? laneIdx - 1 : laneIdx + 1
+      if (swapIdx < 0 || swapIdx >= laneCards.length) return prev
+      const swapId = laneCards[swapIdx].id
+      const next = [...prev]
+      const i = next.findIndex(c => c.id === cardId)
+      const j = next.findIndex(c => c.id === swapId)
+      ;[next[i], next[j]] = [next[j], next[i]]
+      return next
+    })
+  }, [pushUndo])
+
   // ── Modal helpers ─────────────────────────────────────────────────────────
   const openModal = useCallback((laneId?: LaneId) => {
     setEditingCard(null); setInitialLane(laneId || null); setIsModalOpen(true)
@@ -296,7 +314,7 @@ export function VisionBoard() {
                 cards={cards.filter(c => c.laneId === lane.id)}
                 isFirst={index === 0} isLast={index === LANES.length - 1}
                 onAddClick={() => openModal(lane.id)}
-                onMoveCard={moveCard} onDeleteCard={deleteCard} onEditCard={openEditModal}
+                onMoveCard={moveCard} onDeleteCard={deleteCard} onEditCard={openEditModal} onReorderCard={reorderCard}
               />
             ))}
           </div>
