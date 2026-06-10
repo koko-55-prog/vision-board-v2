@@ -43,12 +43,21 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
             ✦
           </div>
           {/* Brand text — desktop only */}
-          <p
-            className="hidden sm:block leading-none tracking-[0.14em] text-stone-900 font-bold flex-shrink-0"
-            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '18px' }}
-          >
-            VISION BOARD
-          </p>
+          <div className="hidden sm:flex flex-col flex-shrink-0" style={{ gap: '2px' }}>
+            <p
+              className="leading-none tracking-[0.14em] text-stone-900 font-bold"
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '18px' }}
+            >
+              VISION BOARD
+            </p>
+            <p
+              className="leading-none tracking-wide"
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#b5afa8', fontStyle: 'italic' }}
+            >
+              あなたの時間軸に、夢を貼ろう
+              <span style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600 }}>· by KOKO</span>
+            </p>
+          </div>
           {/* Board name — desktop only */}
           <button
             onClick={onBoardManagerClick}
@@ -121,21 +130,30 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
         </div>
       </div>
 
-      {/* Row 2: mobile only — brand name + board name */}
-      <div className="sm:hidden flex items-center gap-2 px-4 pb-2">
+      {/* Row 2: mobile only — brand name + board name + tagline */}
+      <div className="sm:hidden flex flex-col px-4 pb-2" style={{ gap: '2px' }}>
+        <div className="flex items-center gap-2">
+          <p
+            className="leading-none tracking-[0.12em] text-stone-800 font-bold flex-shrink-0 text-[15px]"
+            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
+          >
+            VISION BOARD
+          </p>
+          <button
+            onClick={onBoardManagerClick}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors min-w-0"
+          >
+            <span className="text-sm font-semibold text-stone-600 truncate">{boardName}</span>
+            <ChevronDown size={12} className="text-stone-400 flex-shrink-0" />
+          </button>
+        </div>
         <p
-          className="leading-none tracking-[0.12em] text-stone-800 font-bold flex-shrink-0 text-[15px]"
-          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
+          className="leading-none tracking-wide"
+          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#b5afa8', fontStyle: 'italic' }}
         >
-          VISION BOARD
+          あなたの時間軸に、夢を貼ろう
+          <span style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600 }}>· by KOKO</span>
         </p>
-        <button
-          onClick={onBoardManagerClick}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors min-w-0"
-        >
-          <span className="text-sm font-semibold text-stone-600 truncate">{boardName}</span>
-          <ChevronDown size={12} className="text-stone-400 flex-shrink-0" />
-        </button>
       </div>
     </header>
   )
