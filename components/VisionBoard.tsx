@@ -258,6 +258,13 @@ export function VisionBoard() {
         el.style.height = 'auto'
       })
 
+      // Remove line-clamp so full card text is visible in the download
+      clone.querySelectorAll<HTMLElement>('p').forEach(el => {
+        el.style.overflow = 'visible'
+        el.style.setProperty('-webkit-line-clamp', 'unset')
+        el.style.setProperty('display', 'block')
+      })
+
       // Mount off-screen
       const wrapper = document.createElement('div')
       wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;'
