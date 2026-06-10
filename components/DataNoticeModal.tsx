@@ -92,6 +92,18 @@ export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeMod
           </p>
         </div>
 
+        {/* About this app */}
+        <div className="rounded-2xl px-4 py-3.5 flex gap-3 items-start text-xs leading-relaxed" style={{ backgroundColor: '#f5f3ff', border: '1px solid #ddd6fe' }}>
+          <span className="text-base flex-shrink-0">🤖</span>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-semibold text-violet-800">このアプリについて</p>
+            <p className="text-violet-700">非エンジニアのKOKOがAIとペアプログラミングして開発しています。</p>
+            <a href="#" className="text-violet-600 underline underline-offset-2 hover:text-violet-800 transition-colors">
+              自分も何かしらのアプリを試しに作ってみたい方はこちら →
+            </a>
+          </div>
+        </div>
+
         {/* CTA */}
         <button
           onClick={onClose}
