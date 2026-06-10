@@ -27,7 +27,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   })
 }
 
-function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.85): Promise<string> {
+function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.92): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
@@ -117,7 +117,11 @@ export async function fetchPollinationsImage(query: string): Promise<ImageResult
 
 export async function uploadImageFile(file: File): Promise<ImageResult> {
   const raw = await blobToDataUrl(file)
-  return { url: await compressToJpeg(raw), source: 'upload' }
+  // 800KB未満はcanvas変換をスキップ（カラープロファイル保持・画質劣化なし）
+  if (file.size < 800 * 1024) {
+    return { url: raw, source: 'upload' }
+  }
+  return { url: await compressToJpeg(raw, 1200, 900, 0.92), source: 'upload' }
 }
 
 // ── Face Photo Utils ──────────────────────────────────────────────────────────
