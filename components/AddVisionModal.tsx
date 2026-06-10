@@ -24,6 +24,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   const [selectedLaneId, setSelectedLaneId] = useState<LaneId>(editingCard?.laneId ?? initialLaneId ?? 'origin')
   const [imageUrl, setImageUrl] = useState<string | null>(editingCard?.imageUrl ?? null)
   const [imageSource, setImageSource] = useState<ImageSource>(editingCard?.imageSource ?? 'mock')
+  const [imagePosition, setImagePosition] = useState<{ x: number; y: number }>(editingCard?.imagePosition ?? { x: 50, y: 50 })
   const [isPexelsSearching, setIsPexelsSearching] = useState(false)
   const [isAIGenerating, setIsAIGenerating] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -136,9 +137,18 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
   const setImage = (url: string, source: ImageSource) => {
     setImageUrl(url)
     setImageSource(source)
+    setImagePosition({ x: 50, y: 50 })
     setIsImgLoading(true)
     setImgPreviewError(false)
     setFetchError(null)
+  }
+
+  const NUDGE = 10
+  const nudgePosition = (dir: 'up' | 'down' | 'left' | 'right') => {
+    setImagePosition(prev => ({
+      x: dir === 'left' ? Math.max(0, prev.x - NUDGE) : dir === 'right' ? Math.min(100, prev.x + NUDGE) : prev.x,
+      y: dir === 'up'   ? Math.max(0, prev.y - NUDGE) : dir === 'down'  ? Math.min(100, prev.y + NUDGE) : prev.y,
+    }))
   }
 
   const searchPexels = useCallback(async () => {
@@ -187,7 +197,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
 
   const handleSubmit = () => {
     if (!canSubmit) return
-    const data = { text: text.trim(), imageUrl: imageUrl!, laneId: selectedLaneId, imageSource }
+    const data = { text: text.trim(), imageUrl: imageUrl!, laneId: selectedLaneId, imageSource, imagePosition }
     if (isEditing && onEdit) { onEdit(editingCard!.id, data) } else { onAdd(data) }
     onClose()
   }
@@ -285,7 +295,10 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
-            <p className="text-[10px] leading-relaxed mt-2" style={{ color: '#b5b0a8' }}>
+            <p className="text-[10px] leading-relaxed mt-1.5" style={{ color: '#a0c4b8', fontWeight: 600 }}>
+              📐 自分の写真は 800 × 600 px（横4:3）がぴったりです
+            </p>
+            <p className="text-[10px] leading-relaxed mt-0.5" style={{ color: '#b5b0a8' }}>
               ※画像・テキストはあなたのデバイス上のブラウザ（localStorage）内だけに保存されます。外部への送信や第三者への共有は一切ありません。
             </p>
 
@@ -453,26 +466,44 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
 
             {/* Preview */}
             {imageUrl && (
-              <div className="mt-3 relative rounded-xl overflow-hidden bg-stone-100" style={{ aspectRatio: '4/3' }}>
-                {isImgLoading && !imgPreviewError && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-stone-100 z-10">
-                    <Loader2 size={22} className="animate-spin text-stone-400" />
-                    <span className="text-xs text-stone-400">
-                      {imageSource === 'pollinations' ? 'AI画像を読み込み中...' : '読み込み中...'}
-                    </span>
-                  </div>
-                )}
-                <img src={imageUrl} alt="preview" className="w-full h-full object-cover"
-                  onLoad={() => setIsImgLoading(false)}
-                  onError={() => { setImgPreviewError(true); setIsImgLoading(false) }} />
-                {!imgPreviewError && !isImgLoading && (
-                  <div className="absolute top-2 left-2"><CheckCircle2 size={16} className="text-white drop-shadow" /></div>
-                )}
-                {!isImgLoading && (
-                  <div className="absolute bottom-2 right-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.52)', color: 'white' }}>
-                      {imageSource === 'face-ai' ? '✦ 顔写真AI' : imageSource === 'huggingface' ? '🤗 HF生成' : imageSource === 'pollinations' ? '✦ AI生成' : imageSource === 'upload' ? '📁 アップロード' : '📷 Pexels'}
-                    </span>
+              <div className="mt-3">
+                <div className="relative rounded-xl overflow-hidden bg-stone-100" style={{ aspectRatio: '4/3' }}>
+                  {isImgLoading && !imgPreviewError && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-stone-100 z-10">
+                      <Loader2 size={22} className="animate-spin text-stone-400" />
+                      <span className="text-xs text-stone-400">
+                        {imageSource === 'pollinations' ? 'AI画像を読み込み中...' : '読み込み中...'}
+                      </span>
+                    </div>
+                  )}
+                  <img src={imageUrl} alt="preview" className="w-full h-full object-cover"
+                    style={{ objectPosition: `${imagePosition.x}% ${imagePosition.y}%` }}
+                    onLoad={() => setIsImgLoading(false)}
+                    onError={() => { setImgPreviewError(true); setIsImgLoading(false) }} />
+                  {!imgPreviewError && !isImgLoading && (
+                    <div className="absolute top-2 left-2"><CheckCircle2 size={16} className="text-white drop-shadow" /></div>
+                  )}
+                  {!isImgLoading && (
+                    <div className="absolute bottom-2 right-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(0,0,0,0.52)', color: 'white' }}>
+                        {imageSource === 'face-ai' ? '✦ 顔写真AI' : imageSource === 'huggingface' ? '🤗 HF生成' : imageSource === 'pollinations' ? '✦ AI生成' : imageSource === 'upload' ? '📁 アップロード' : '📷 Pexels'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* Position adjuster */}
+                {!isImgLoading && !imgPreviewError && (
+                  <div className="mt-2 flex items-center justify-center gap-3">
+                    <span className="text-[10px] text-stone-400">表示位置</span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <button onClick={() => nudgePosition('up')} className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 text-xs transition-colors">↑</button>
+                      <div className="flex gap-0.5">
+                        <button onClick={() => nudgePosition('left')} className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 text-xs transition-colors">←</button>
+                        <button onClick={() => setImagePosition({ x: 50, y: 50 })} className="w-7 h-7 rounded-lg bg-stone-200 hover:bg-stone-300 flex items-center justify-center text-stone-400 transition-colors" title="中央に戻す" style={{ fontSize: '9px' }}>⊙</button>
+                        <button onClick={() => nudgePosition('right')} className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 text-xs transition-colors">→</button>
+                      </div>
+                      <button onClick={() => nudgePosition('down')} className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 text-xs transition-colors">↓</button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -9,6 +9,7 @@ export interface VisionCard {
   rotation: number
   createdAt: Date
   imageSource: ImageSource
+  imagePosition?: { x: number; y: number }
 }
 
 export interface Lane {

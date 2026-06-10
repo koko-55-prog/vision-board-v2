@@ -133,7 +133,7 @@ export function VisionCard({ card, lanes, index, onMove, onDelete, onEdit }: Vis
             alt={card.text}
             onError={() => setImgError(true)}
             className="w-full h-full object-cover"
-            style={{ display: 'block' }}
+            style={{ display: 'block', objectPosition: `${card.imagePosition?.x ?? 50}% ${card.imagePosition?.y ?? 50}%` }}
           />
         </div>
 
