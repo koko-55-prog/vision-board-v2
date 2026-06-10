@@ -52,10 +52,10 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
             </p>
             <p
               className="leading-none tracking-wide"
-              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#b5afa8', fontStyle: 'italic' }}
+              style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#78716c', fontStyle: 'italic' }}
             >
               あなたの時間軸に、夢を貼ろう
-              <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'none' }}>· by KOKO</a>
+              <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}>· by KOKO</a>
             </p>
           </div>
           {/* Board name — desktop only */}
@@ -149,10 +149,10 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
         </div>
         <p
           className="leading-none tracking-wide"
-          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#b5afa8', fontStyle: 'italic' }}
+          style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#78716c', fontStyle: 'italic' }}
         >
           あなたの時間軸に、夢を貼ろう
-          <span style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600 }}>· by KOKO</span>
+          <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}>· by KOKO</a>
         </p>
       </div>
     </header>
