@@ -43,6 +43,13 @@ function compressToJpeg(src: string, maxW = 800, maxH = 600, quality = 0.92): Pr
   })
 }
 
+// canvas経由を避けてカラープロファイルを保持する。大きい場合のみ圧縮。
+async function smartEncode(blob: Blob, skipThreshold = 400 * 1024): Promise<string> {
+  const raw = await blobToDataUrl(blob)
+  if (blob.size < skipThreshold) return raw
+  return compressToJpeg(raw, 1200, 900, 0.92)
+}
+
 // ── Prompt style constants ────────────────────────────────────────────────────
 
 const GENDER_PROMPTS = {
@@ -79,8 +86,7 @@ export async function fetchVisionImageReal(query: string): Promise<ImageResult> 
     )
     if (res.ok) {
       const blob = await res.blob()
-      const raw = await blobToDataUrl(blob)
-      return { url: await compressToJpeg(raw), source: 'pexels' }
+      return { url: await smartEncode(blob), source: 'pexels' }
     }
     if (res.status !== 404) console.warn('Pexels search error:', res.status)
   } catch (err) {
@@ -109,19 +115,13 @@ export async function fetchPollinationsImage(query: string): Promise<ImageResult
   }
 
   const blob = await res.blob()
-  const raw = await blobToDataUrl(blob)
-  return { url: await compressToJpeg(raw), source: 'pollinations' }
+  return { url: await smartEncode(blob), source: 'pollinations' }
 }
 
 // ── Image Upload ──────────────────────────────────────────────────────────────
 
 export async function uploadImageFile(file: File): Promise<ImageResult> {
-  const raw = await blobToDataUrl(file)
-  // 800KB未満はcanvas変換をスキップ（カラープロファイル保持・画質劣化なし）
-  if (file.size < 800 * 1024) {
-    return { url: raw, source: 'upload' }
-  }
-  return { url: await compressToJpeg(raw, 1200, 900, 0.92), source: 'upload' }
+  return { url: await smartEncode(file, 800 * 1024), source: 'upload' }
 }
 
 // ── Face Photo Utils ──────────────────────────────────────────────────────────
