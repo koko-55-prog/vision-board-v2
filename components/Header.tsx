@@ -55,7 +55,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
               style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#b5afa8', fontStyle: 'italic' }}
             >
               あなたの時間軸に、夢を貼ろう
-              <span style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600 }}>· by KOKO</span>
+              <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'none' }}>· by KOKO</a>
             </p>
           </div>
           {/* Board name — desktop only */}
