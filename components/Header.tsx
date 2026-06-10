@@ -1,6 +1,6 @@
 'use client'
 
-import { Plus, Download, ChevronDown, Loader2, Undo2, UserCircle2 } from 'lucide-react'
+import { Plus, Download, ChevronDown, Loader2, Undo2, Redo2, UserCircle2, ExternalLink } from 'lucide-react'
 
 const GENDER_LABEL: Record<string, string> = { male: '男性', female: '女性', unspecified: '指定なし' }
 
@@ -13,12 +13,15 @@ interface HeaderProps {
   onUndo: () => void
   canUndo: boolean
   undoCount: number
+  onRedo: () => void
+  canRedo: boolean
+  redoCount: number
   onGenderSettings: () => void
   currentGender: string | null
   onDataInfo: () => void
 }
 
-export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount, onGenderSettings, currentGender, onDataInfo }: HeaderProps) {
+export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload, isDownloading, onUndo, canUndo, undoCount, onRedo, canRedo, redoCount, onGenderSettings, currentGender, onDataInfo }: HeaderProps) {
   return (
     <header
       className="flex-shrink-0 flex flex-col border-b"
@@ -55,7 +58,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
               style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#78716c', fontStyle: 'italic' }}
             >
               あなたの時間軸に、夢を貼ろう
-              <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}>· by KOKO</a>
+              <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>· by KOKO<ExternalLink size={7} strokeWidth={2.5} /></a>
             </p>
           </div>
           {/* Board name — desktop only */}
@@ -107,6 +110,22 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
             )}
           </button>
 
+          {/* Redo */}
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="sheikah-glow-hover relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl border border-white/40 text-sm font-medium text-teal-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            title="一つ進む (⌘⇧Z)"
+          >
+            <Redo2 size={14} />
+            <span className="hidden sm:inline">一つ進む</span>
+            {canRedo && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a8fa8, #2d6a4f)' }}>
+                {redoCount > 9 ? '9+' : redoCount}
+              </span>
+            )}
+          </button>
+
           {/* Download */}
           <button
             onClick={onDownload}
@@ -152,7 +171,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
           style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '10px', color: '#78716c', fontStyle: 'italic' }}
         >
           あなたの時間軸に、夢を貼ろう
-          <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: '2px' }}>· by KOKO</a>
+          <a href="https://note.com/koko_eigo_/" target="_blank" rel="noopener noreferrer" style={{ marginLeft: '5px', fontStyle: 'normal', color: '#1a8fa8', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>· by KOKO<ExternalLink size={7} strokeWidth={2.5} /></a>
         </p>
       </div>
     </header>

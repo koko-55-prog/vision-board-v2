@@ -114,23 +114,38 @@ export function VisionBoard() {
     return () => clearTimeout(saveTimer.current)
   }, [cards, boardName, activeBoardId, isLoaded])
 
-  // ── Undo history ──────────────────────────────────────────────────────────
+  // ── Undo/Redo history ─────────────────────────────────────────────────────
   const cardsRef = useRef<VisionCard[]>(cards)
   useEffect(() => { cardsRef.current = cards }, [cards])
 
   const undoStackRef = useRef<VisionCard[][]>([])
+  const redoStackRef = useRef<VisionCard[][]>([])
   const [undoCount, setUndoCount] = useState(0)
+  const [redoCount, setRedoCount] = useState(0)
 
   const pushUndo = useCallback(() => {
     undoStackRef.current = [...undoStackRef.current.slice(-29), [...cardsRef.current]]
     setUndoCount(undoStackRef.current.length)
+    redoStackRef.current = []
+    setRedoCount(0)
   }, [])
 
   const undo = useCallback(() => {
     if (undoStackRef.current.length === 0) return
+    redoStackRef.current = [...redoStackRef.current, [...cardsRef.current]]
+    setRedoCount(redoStackRef.current.length)
     const previous = undoStackRef.current.pop()!
     setUndoCount(undoStackRef.current.length)
     setCards(previous)
+  }, [])
+
+  const redo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return
+    undoStackRef.current = [...undoStackRef.current, [...cardsRef.current]]
+    setUndoCount(undoStackRef.current.length)
+    const next = redoStackRef.current.pop()!
+    setRedoCount(redoStackRef.current.length)
+    setCards(next)
   }, [])
 
   useEffect(() => {
@@ -139,10 +154,14 @@ export function VisionBoard() {
         e.preventDefault()
         undo()
       }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        redo()
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [undo])
+  }, [undo, redo])
 
   // ── Card operations ───────────────────────────────────────────────────────
   const addCard = useCallback((data: Omit<VisionCard, 'id' | 'createdAt' | 'rotation'>) => {
@@ -284,9 +303,25 @@ export function VisionBoard() {
 
       document.body.removeChild(wrapper)
 
+      const scale = 1.5
+      const headerH = Math.round(52 * scale)
+      const final = document.createElement('canvas')
+      final.width = canvas.width
+      final.height = canvas.height + headerH
+      const ctx = final.getContext('2d')!
+      ctx.fillStyle = '#f5f2ed'
+      ctx.fillRect(0, 0, final.width, final.height)
+      ctx.fillStyle = '#1c1917'
+      ctx.font = `bold ${Math.round(13 * scale)}px Georgia, serif`
+      ctx.fillText('VISION BOARD', Math.round(20 * scale), Math.round(22 * scale))
+      ctx.fillStyle = '#78716c'
+      ctx.font = `italic ${Math.round(9 * scale)}px Georgia, serif`
+      ctx.fillText(boardName || 'マイビジョンボード', Math.round(20 * scale), Math.round(38 * scale))
+      ctx.drawImage(canvas, 0, headerH)
+
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = final.toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
@@ -307,6 +342,9 @@ export function VisionBoard() {
         onUndo={undo}
         canUndo={undoCount > 0}
         undoCount={undoCount}
+        onRedo={redo}
+        canRedo={redoCount > 0}
+        redoCount={redoCount}
         onGenderSettings={() => setShowGenderSettings(true)}
         currentGender={currentGender}
         onDataInfo={() => setShowDataNoticeInfo(true)}
