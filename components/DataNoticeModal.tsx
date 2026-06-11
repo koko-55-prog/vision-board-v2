@@ -98,7 +98,7 @@ export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeMod
           <div className="flex flex-col gap-1.5">
             <p className="text-xs font-semibold text-violet-800">このアプリについて</p>
             <p className="text-violet-700">非エンジニアのKOKOがAIを使って開発しています。</p>
-            <a href="#" className="text-violet-600 underline underline-offset-2 hover:text-violet-800 transition-colors">
+            <a href="https://note.com/koko_digital/n/n8a6f9856a146" target="_blank" rel="noopener noreferrer" className="text-violet-600 underline underline-offset-2 hover:text-violet-800 transition-colors">
               自分も何かしらのアプリを試しに作ってみたい方はこちら →
             </a>
           </div>
