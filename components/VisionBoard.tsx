@@ -255,7 +255,7 @@ export function VisionBoard() {
   const handleDownload = useCallback(async () => {
     setIsDownloading(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
+      const { toPng } = await import('html-to-image')
       const source = document.getElementById('board-lanes-inner')
       if (!source) return
 
@@ -284,73 +284,51 @@ export function VisionBoard() {
         el.style.setProperty('display', 'block')
       })
 
-      // Header banner (added to DOM so html2canvas captures it without re-encoding)
+      // Header banner
       const headerDiv = document.createElement('div')
       headerDiv.style.cssText = 'padding:12px 20px 8px;background:#a8e6f0;flex-shrink:0;'
       headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">TIMELINE VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
 
-      // Mount off-screen — flex column so header sits above board
-      // width:max-content prevents viewport-width constraint on mobile (which squishes lanes)
+      // Mount off-screen — width:max-content prevents viewport constraint squishing lanes on mobile
       const wrapper = document.createElement('div')
       wrapper.style.cssText = 'position:absolute;top:0;left:-99999px;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);display:flex;flex-direction:column;width:max-content;'
       wrapper.appendChild(headerDiv)
       wrapper.appendChild(clone)
       document.body.appendChild(wrapper)
 
-      // Wait for layout + images
-      await new Promise(r => setTimeout(r, 150))
+      // Wait for layout
+      await new Promise(r => setTimeout(r, 200))
 
-      // Wait for any unloaded images in the clone
+      // Pre-convert relative image URLs to data URLs so html-to-image can inline them on iOS
       await Promise.all(
-        Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))
-          .filter(img => !img.complete)
-          .map(img => new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res() }))
+        Array.from(wrapper.querySelectorAll<HTMLImageElement>('img')).map(async img => {
+          if (!img.src.startsWith('data:') && !img.src.startsWith('blob:')) {
+            try {
+              const res = await fetch(img.src)
+              const blob = await res.blob()
+              img.src = await new Promise<string>(r => {
+                const reader = new FileReader()
+                reader.onloadend = () => r(reader.result as string)
+                reader.readAsDataURL(blob)
+              })
+            } catch { /* keep original src on fetch failure */ }
+          }
+        })
       )
 
-      // Remove backdrop-filter: it can cause color artifacts in html2canvas on iOS Safari
-      wrapper.querySelectorAll<HTMLElement>('*').forEach(el => {
-        el.style.backdropFilter = 'none'
-        el.style.setProperty('-webkit-backdrop-filter', 'none')
-      })
-
-      // Fix object-fit:cover for portrait photos via CSS only (no canvas conversion)
-      // Keeping <img> elements avoids P3→sRGB color loss from canvas drawImage on iOS
-      for (const img of Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))) {
-        const container = img.parentElement
-        if (!container || !img.naturalWidth || !img.naturalHeight) continue
-        const cw = container.offsetWidth
-        const ch = container.offsetHeight
-        if (!cw || !ch) continue
-        // Resolve aspect-ratio container to explicit height so html2canvas can measure it
-        container.style.height = `${ch}px`
-        container.style.aspectRatio = 'unset'
-        const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
-        const scaledW = img.naturalWidth * scale
-        const scaledH = img.naturalHeight * scale
-        const pos = (img.style.objectPosition || '50% 50%').trim().split(/\s+/)
-        const px = parseFloat(pos[0]) / 100
-        const py = parseFloat(pos[1] ?? pos[0]) / 100
-        img.style.objectFit = 'none'
-        img.style.width = `${scaledW}px`
-        img.style.height = `${scaledH}px`
-        img.style.marginLeft = `${-((scaledW - cw) * px)}px`
-        img.style.marginTop = `${-((scaledH - ch) * py)}px`
-      }
-
-      // Capture wrapper (header + board) in one pass
-      const canvas = await html2canvas(wrapper, {
+      // Capture with html-to-image (SVG foreignObject — browser-native rendering preserves P3 colors)
+      const dataUrl = await toPng(wrapper, {
         backgroundColor: '#a8e6f0',
-        scale: Math.min(window.devicePixelRatio || 1, 2),
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        width: wrapper.scrollWidth,
+        height: wrapper.scrollHeight,
       })
 
       document.body.removeChild(wrapper)
 
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = dataUrl
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
