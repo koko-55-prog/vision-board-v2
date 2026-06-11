@@ -300,9 +300,9 @@ export function VisionBoard() {
       await new Promise(r => setTimeout(r, 150))
 
       // Capture wrapper (header + board) in one pass — avoids drawImage re-encoding that degrades colors
-      const canvas = await html2canvas(wrapper, {
+      const rawCanvas = await html2canvas(wrapper, {
         backgroundColor: '#a8e6f0',
-        scale: 1.5,
+        scale: Math.min(window.devicePixelRatio || 1, 2),
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -310,9 +310,16 @@ export function VisionBoard() {
 
       document.body.removeChild(wrapper)
 
+      // Re-draw onto an explicit sRGB canvas to prevent iOS P3 color space from washing out colors
+      const outputCanvas = document.createElement('canvas')
+      outputCanvas.width = rawCanvas.width
+      outputCanvas.height = rawCanvas.height
+      const ctx = outputCanvas.getContext('2d', { colorSpace: 'srgb' })
+      ctx?.drawImage(rawCanvas, 0, 0)
+
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = (ctx ? outputCanvas : rawCanvas).toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
