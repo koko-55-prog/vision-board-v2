@@ -290,8 +290,9 @@ export function VisionBoard() {
       headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
 
       // Mount off-screen — flex column so header sits above board
+      // width:max-content prevents viewport-width constraint on mobile (which squishes lanes)
       const wrapper = document.createElement('div')
-      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;display:flex;flex-direction:column;'
+      wrapper.style.cssText = 'position:fixed;top:-99999px;left:0;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);z-index:-1;display:flex;flex-direction:column;width:max-content;'
       wrapper.appendChild(headerDiv)
       wrapper.appendChild(clone)
       document.body.appendChild(wrapper)
