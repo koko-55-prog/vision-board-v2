@@ -307,26 +307,28 @@ export function VisionBoard() {
           .map(img => new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res() }))
       )
 
-      // Pre-crop images to fix html2canvas object-fit:cover rendering
-      // (portrait photos were being squished instead of cropped)
+      // Fix object-fit:cover for portrait photos via CSS only (no canvas conversion)
+      // Keeping <img> elements avoids P3→sRGB color loss from canvas drawImage on iOS
       for (const img of Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))) {
         const container = img.parentElement
         if (!container || !img.naturalWidth || !img.naturalHeight) continue
         const cw = container.offsetWidth
         const ch = container.offsetHeight
         if (!cw || !ch) continue
+        // Resolve aspect-ratio container to explicit height so html2canvas can measure it
+        container.style.height = `${ch}px`
+        container.style.aspectRatio = 'unset'
         const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
         const scaledW = img.naturalWidth * scale
         const scaledH = img.naturalHeight * scale
         const pos = (img.style.objectPosition || '50% 50%').trim().split(/\s+/)
         const px = parseFloat(pos[0]) / 100
         const py = parseFloat(pos[1] ?? pos[0]) / 100
-        const cvs = document.createElement('canvas')
-        cvs.width = cw
-        cvs.height = ch
-        cvs.style.cssText = `display:block;width:${cw}px;height:${ch}px;`
-        cvs.getContext('2d')?.drawImage(img, -(scaledW - cw) * px, -(scaledH - ch) * py, scaledW, scaledH)
-        container.replaceChild(cvs, img)
+        img.style.objectFit = 'none'
+        img.style.width = `${scaledW}px`
+        img.style.height = `${scaledH}px`
+        img.style.marginLeft = `${-((scaledW - cw) * px)}px`
+        img.style.marginTop = `${-((scaledH - ch) * py)}px`
       }
 
       // Capture wrapper (header + board) in one pass
