@@ -307,6 +307,12 @@ export function VisionBoard() {
           .map(img => new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res() }))
       )
 
+      // Remove backdrop-filter: it can cause color artifacts in html2canvas on iOS Safari
+      wrapper.querySelectorAll<HTMLElement>('*').forEach(el => {
+        el.style.backdropFilter = 'none'
+        el.style.setProperty('-webkit-backdrop-filter', 'none')
+      })
+
       // Fix object-fit:cover for portrait photos via CSS only (no canvas conversion)
       // Keeping <img> elements avoids P3→sRGB color loss from canvas drawImage on iOS
       for (const img of Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))) {
@@ -380,7 +386,7 @@ export function VisionBoard() {
               <TimelineLane
                 key={lane.id} lane={lane} lanes={LANES}
                 cards={cards.filter(c => c.laneId === lane.id)}
-                isFirst={index === 0} isLast={index === LANES.length - 1}
+                isLast={index === LANES.length - 1}
                 onAddClick={() => openModal(lane.id)}
                 onMoveCard={moveCard} onDeleteCard={deleteCard} onEditCard={openEditModal} onReorderCard={reorderCard}
               />
