@@ -255,21 +255,18 @@ export function VisionBoard() {
   const handleDownload = useCallback(async () => {
     setIsDownloading(true)
     try {
-      const { toPng } = await import('html-to-image')
+      const html2canvas = (await import('html2canvas')).default
       const source = document.getElementById('board-lanes-inner')
       if (!source) return
 
-      // Clone the board and mount off-screen so overflow doesn't clip anything
       const clone = source.cloneNode(true) as HTMLElement
       clone.style.height = 'auto'
       clone.style.alignItems = 'flex-start'
 
-      // Each lane: auto height
       Array.from(clone.children).forEach(child => {
         (child as HTMLElement).style.height = 'auto'
       })
 
-      // Each card area: remove scroll restrictions so all cards show
       clone.querySelectorAll<HTMLElement>('[data-scroll-area]').forEach(el => {
         el.style.overflowY = 'visible'
         el.style.maxHeight = 'none'
@@ -277,49 +274,29 @@ export function VisionBoard() {
         el.style.height = 'auto'
       })
 
-      // Remove line-clamp so full card text is visible in the download
       clone.querySelectorAll<HTMLElement>('p').forEach(el => {
         el.style.overflow = 'visible'
         el.style.setProperty('-webkit-line-clamp', 'unset')
         el.style.setProperty('display', 'block')
       })
 
-      // Header banner
       const headerDiv = document.createElement('div')
       headerDiv.style.cssText = 'padding:12px 20px 8px;background:#a8e6f0;flex-shrink:0;'
       headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">TIMELINE VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
 
-      // Mount off-screen — width:max-content prevents viewport constraint squishing lanes on mobile
       const wrapper = document.createElement('div')
       wrapper.style.cssText = 'position:absolute;top:0;left:-99999px;background:linear-gradient(135deg,#7dd4e8 0%,#a8e6f0 50%,#d0f5f8 100%);display:flex;flex-direction:column;width:max-content;'
       wrapper.appendChild(headerDiv)
       wrapper.appendChild(clone)
       document.body.appendChild(wrapper)
 
-      // Wait for layout
       await new Promise(r => setTimeout(r, 200))
 
-      // Pre-convert relative image URLs to data URLs so html-to-image can inline them on iOS
-      await Promise.all(
-        Array.from(wrapper.querySelectorAll<HTMLImageElement>('img')).map(async img => {
-          if (!img.src.startsWith('data:') && !img.src.startsWith('blob:')) {
-            try {
-              const res = await fetch(img.src)
-              const blob = await res.blob()
-              img.src = await new Promise<string>(r => {
-                const reader = new FileReader()
-                reader.onloadend = () => r(reader.result as string)
-                reader.readAsDataURL(blob)
-              })
-            } catch { /* keep original src on fetch failure */ }
-          }
-        })
-      )
-
-      // Capture with html-to-image (SVG foreignObject — browser-native rendering preserves P3 colors)
-      const dataUrl = await toPng(wrapper, {
+      const canvas = await html2canvas(wrapper, {
         backgroundColor: '#a8e6f0',
-        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        useCORS: true,
+        allowTaint: true,
         width: wrapper.scrollWidth,
         height: wrapper.scrollHeight,
       })
@@ -328,7 +305,7 @@ export function VisionBoard() {
 
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = dataUrl
+      link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
