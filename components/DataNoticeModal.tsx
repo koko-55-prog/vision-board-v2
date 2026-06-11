@@ -74,8 +74,8 @@ export function DataNoticeModal({ onClose, isOnboarding = false }: DataNoticeMod
         <div className="rounded-2xl px-4 py-3 flex gap-3 items-center text-xs leading-relaxed" style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd' }}>
           <span className="text-base flex-shrink-0">📱💻</span>
           <p className="text-sky-800">
-            PC・スマートフォンどちらでも対応しています。<br />
-            やりやすい方のデバイスで始めてください。
+            PCでの作成を推奨です。<br />
+            スマートフォン版はダウンロード時、画像の色が薄くなってしまいます。現在調整中です。
           </p>
         </div>
 
