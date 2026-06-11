@@ -292,6 +292,40 @@ export function VisionBoard() {
 
       await new Promise(r => setTimeout(r, 200))
 
+      // Pre-render images as canvases to simulate object-fit:cover
+      // html2canvas ignores this CSS property and stretches images instead
+      await Promise.all(
+        Array.from(wrapper.querySelectorAll<HTMLImageElement>('img')).map(img =>
+          new Promise<void>(resolve => {
+            const container = img.parentElement
+            if (!container) { resolve(); return }
+            const w = container.offsetWidth
+            const h = container.offsetHeight
+            if (!w || !h) { resolve(); return }
+            const src = img.src
+            const natural = new Image()
+            natural.crossOrigin = 'anonymous'
+            natural.onload = () => {
+              const cvs = document.createElement('canvas')
+              cvs.width = w
+              cvs.height = h
+              cvs.style.cssText = `width:${w}px;height:${h}px;display:block;`
+              const ctx = cvs.getContext('2d')!
+              const iw = natural.naturalWidth, ih = natural.naturalHeight
+              const ca = w / h, ia = iw / ih
+              let sx = 0, sy = 0, sw = iw, sh = ih
+              if (ia > ca) { sw = ih * ca; sx = (iw - sw) / 2 }
+              else { sh = iw / ca; sy = (ih - sh) / 2 }
+              ctx.drawImage(natural, sx, sy, sw, sh, 0, 0, w, h)
+              img.replaceWith(cvs)
+              resolve()
+            }
+            natural.onerror = () => resolve()
+            natural.src = src
+          })
+        )
+      )
+
       const canvas = await html2canvas(wrapper, {
         backgroundColor: '#a8e6f0',
         scale: Math.min(window.devicePixelRatio || 1, 2),
