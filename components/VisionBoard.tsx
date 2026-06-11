@@ -300,8 +300,37 @@ export function VisionBoard() {
       // Wait for layout + images
       await new Promise(r => setTimeout(r, 150))
 
-      // Capture wrapper (header + board) in one pass — avoids drawImage re-encoding that degrades colors
-      const rawCanvas = await html2canvas(wrapper, {
+      // Wait for any unloaded images in the clone
+      await Promise.all(
+        Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))
+          .filter(img => !img.complete)
+          .map(img => new Promise<void>(res => { img.onload = () => res(); img.onerror = () => res() }))
+      )
+
+      // Pre-crop images to fix html2canvas object-fit:cover rendering
+      // (portrait photos were being squished instead of cropped)
+      for (const img of Array.from(wrapper.querySelectorAll<HTMLImageElement>('img'))) {
+        const container = img.parentElement
+        if (!container || !img.naturalWidth || !img.naturalHeight) continue
+        const cw = container.offsetWidth
+        const ch = container.offsetHeight
+        if (!cw || !ch) continue
+        const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight)
+        const scaledW = img.naturalWidth * scale
+        const scaledH = img.naturalHeight * scale
+        const pos = (img.style.objectPosition || '50% 50%').trim().split(/\s+/)
+        const px = parseFloat(pos[0]) / 100
+        const py = parseFloat(pos[1] ?? pos[0]) / 100
+        const cvs = document.createElement('canvas')
+        cvs.width = cw
+        cvs.height = ch
+        cvs.style.cssText = `display:block;width:${cw}px;height:${ch}px;`
+        cvs.getContext('2d')?.drawImage(img, -(scaledW - cw) * px, -(scaledH - ch) * py, scaledW, scaledH)
+        container.replaceChild(cvs, img)
+      }
+
+      // Capture wrapper (header + board) in one pass
+      const canvas = await html2canvas(wrapper, {
         backgroundColor: '#a8e6f0',
         scale: Math.min(window.devicePixelRatio || 1, 2),
         useCORS: true,
@@ -311,16 +340,9 @@ export function VisionBoard() {
 
       document.body.removeChild(wrapper)
 
-      // Re-draw onto an explicit sRGB canvas to prevent iOS P3 color space from washing out colors
-      const outputCanvas = document.createElement('canvas')
-      outputCanvas.width = rawCanvas.width
-      outputCanvas.height = rawCanvas.height
-      const ctx = outputCanvas.getContext('2d', { colorSpace: 'srgb' })
-      ctx?.drawImage(rawCanvas, 0, 0)
-
       const link = document.createElement('a')
       link.download = `${boardName || 'vision-board'}.png`
-      link.href = (ctx ? outputCanvas : rawCanvas).toDataURL('image/png')
+      link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {
       console.error('Download failed:', err)
