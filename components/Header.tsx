@@ -51,7 +51,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
               className="leading-none tracking-[0.14em] text-stone-900 font-bold"
               style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '18px' }}
             >
-              VISION BOARD
+              TIMELINE VISION BOARD
             </p>
             <p
               className="leading-none tracking-wide"
@@ -156,7 +156,7 @@ export function Header({ boardName, onAddClick, onBoardManagerClick, onDownload,
             className="leading-none tracking-[0.12em] text-stone-800 font-bold flex-shrink-0 text-[15px]"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
-            VISION BOARD
+            TIMELINE VISION BOARD
           </p>
           <button
             onClick={onBoardManagerClick}

@@ -222,7 +222,7 @@ export function AddVisionModal({ lanes, initialLaneId, editingCard, onAdd, onEdi
         {/* Header */}
         <div className="px-5 pt-3 pb-3 border-b border-stone-100 flex-shrink-0 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-stone-400">Vision Board</p>
+            <p className="text-[10px] font-bold tracking-[0.18em] uppercase text-stone-400">Timeline Vision Board</p>
             <h2 className="text-xl font-bold text-stone-900 mt-0.5" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>
               {isEditing ? 'ビジョンを編集' : 'ビジョンを追加'}
             </h2>

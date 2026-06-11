@@ -287,7 +287,7 @@ export function VisionBoard() {
       // Header banner (added to DOM so html2canvas captures it without re-encoding)
       const headerDiv = document.createElement('div')
       headerDiv.style.cssText = 'padding:12px 20px 8px;background:#a8e6f0;flex-shrink:0;'
-      headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
+      headerDiv.innerHTML = `<p style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#0f3f52;letter-spacing:2px;margin:0;line-height:1.3;">TIMELINE VISION BOARD</p><p style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:#1a5f75;margin:4px 0 0;line-height:1.3;">${boardName || 'マイビジョンボード'}</p>`
 
       // Mount off-screen — flex column so header sits above board
       // width:max-content prevents viewport-width constraint on mobile (which squishes lanes)
